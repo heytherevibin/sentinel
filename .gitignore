@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# Next.js
+.next/
+out/
+build/
+
+# Python Build
+dist/
+build/
+*.spec
+*.exe
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Sentinel Data (don't commit live DB)
+hq/data/sensors.json
+hq/data/alerts.json
+hq/data/commands.json
+hq/data/offline_queue.json
+
+# IDE
+.vscode/
+.idea/
+
+# Misc
+.DS_Store
+Thumbs.db
+*.log

@@ -1,0 +1,30 @@
+[
+  {
+    "id": "1",
+    "name": "AWS_ACCESS_KEY",
+    "pattern": "AKIA[0-9A-Z]{16}",
+    "action": "BLOCK",
+    "description": "Blocks AWS IAM Access Keys"
+  },
+  {
+    "id": "2",
+    "name": "JWT_TOKEN",
+    "pattern": "eyJ[a-zA-Z0-9_\\-\\.]+\\.[a-zA-Z0-9_\\-\\.]+\\.[a-zA-Z0-9_\\-\\.]+",
+    "action": "BLOCK",
+    "description": "Blocks JSON Web Tokens"
+  },
+  {
+    "id": "3",
+    "name": "EMAIL_ADDRESS",
+    "pattern": "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}",
+    "action": "LOG_ONLY",
+    "description": "Logs PII (Email)"
+  },
+  {
+    "id": "4",
+    "name": "INTERNAL_KEYWORD",
+    "pattern": "(CONFIDENTIAL|SECRET|PROPRIETARY)",
+    "action": "BLOCK",
+    "description": "Blocks Corporate Classifications"
+  }
+]

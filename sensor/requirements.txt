@@ -1,0 +1,7 @@
+requests
+pyperclip
+pygetwindow
+psutil
+keyboard
+plyer
+pyinstaller
