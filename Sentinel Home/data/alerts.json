@@ -1,0 +1,82 @@
+[
+  {
+    "id": "ea16c2f8-1940-4807-b3ed-3116290a2473",
+    "timestamp": 1768678113064,
+    "sensorId": "c9323f68-89ec-4c8e-94b8-850a8f8a7863",
+    "type": "CLIPBOARD_LOG",
+    "metadata": {
+      "policyId": "3",
+      "policyName": "EMAIL_ADDRESS",
+      "host": "Vibins-MacBook-Pro.local"
+    }
+  },
+  {
+    "id": "70c0ed6a-6345-4d70-83b6-a3cd17c51575",
+    "timestamp": 1768676418820,
+    "sensorId": "c9323f68-89ec-4c8e-94b8-850a8f8a7863",
+    "type": "CLIPBOARD_LOG",
+    "metadata": {
+      "policyId": "3",
+      "policyName": "EMAIL_ADDRESS",
+      "host": "Vibins-MacBook-Pro.local"
+    }
+  },
+  {
+    "id": "5a38f109-53b9-46b0-923e-d750a6567598",
+    "timestamp": 1768673691096,
+    "sensorId": "c9323f68-89ec-4c8e-94b8-850a8f8a7863",
+    "type": "CLIPBOARD_LOG",
+    "metadata": {
+      "policyId": "3",
+      "policyName": "EMAIL_ADDRESS",
+      "host": "Vibins-MacBook-Pro.local"
+    }
+  },
+  {
+    "id": "43f6a94b-bbde-4102-9f7a-5c8c71160378",
+    "timestamp": 1768671860244,
+    "sensorId": "c9323f68-89ec-4c8e-94b8-850a8f8a7863",
+    "type": "CLIPBOARD_LOG",
+    "metadata": {
+      "policyId": "3",
+      "policyName": "EMAIL_ADDRESS",
+      "host": "Vibins-MacBook-Pro.local"
+    }
+  },
+  {
+    "id": "2c0a632f-02ca-408d-8cfd-eddb43b48674",
+    "timestamp": 1768670143638,
+    "sensorId": "c9323f68-89ec-4c8e-94b8-850a8f8a7863",
+    "type": "CLIPBOARD_BLOCK",
+    "metadata": {
+      "policyId": "1",
+      "policyName": "AWS_ACCESS_KEY",
+      "contentSnippet": "AKIAIOSFODNN7EXAMPLE...",
+      "host": "Vibins-MacBook-Pro.local"
+    }
+  },
+  {
+    "id": "06aee4ed-39cf-426a-8bbd-69a7720095ab",
+    "timestamp": 1768669900160,
+    "sensorId": "c9323f68-89ec-4c8e-94b8-850a8f8a7863",
+    "type": "CLIPBOARD_BLOCK",
+    "metadata": {
+      "policyId": "1",
+      "policyName": "AWS_ACCESS_KEY",
+      "contentSnippet": "AKIAABABABABABABABAB...",
+      "host": "Vibins-MacBook-Pro.local"
+    }
+  },
+  {
+    "id": "7e0afce4-fb2d-4ce2-80cf-24124141e2b5",
+    "timestamp": 1768669862037,
+    "sensorId": "c9323f68-89ec-4c8e-94b8-850a8f8a7863",
+    "type": "CLIPBOARD_BLOCK",
+    "metadata": {
+      "policyId": "1",
+      "policyName": "AWS_ACCESS_KEY",
+      "contentSnippet": "AKIAABABABABABABABAB...",
+      "host": "Vibins-MacBook-Pro.local"
+    }
+  }
+]
