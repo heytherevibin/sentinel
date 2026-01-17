@@ -9,20 +9,21 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Professional "Void" Palette
+        // Sentinel DLP "Sith" Palette
         c2: {
-          bg: "#050505",       // Absolute Zero
-          paper: "#0A0A0A",    // Secondary Background
-          border: "#262626",   // Subtle Borders
-          surface: "#111111",  // Component Backgrounds
+          bg: "#050505",       // Deep Black
+          paper: "#0c0c0c",    // Panel Background
+          border: "#1f1f1f",   // Subtle Border
+          surface: "#141414",  // Card Surface
 
           // Accents
-          primary: "#00E5FF",  // Cyan (Info/Active)
-          success: "#00CC66",  // Green (Stable)
-          warning: "#FFB020",  // Amber (Risk)
-          danger: "#FF3333",   // Red (Block/Critical)
-          muted: "#525252",    // Text secondary
-          text: "#E5E5E5",     // Text primary
+          primary: "#FF3333",  // Signal Red (Main Action/Critical)
+          secondary: "#FF8800",// Alert Orange
+          success: "#00CC66",  // System Healthy Green (Status only)
+          warning: "#FFCC00",  // Warning Yellow
+          danger: "#FF0000",   // Critical Failure
+          muted: "#525252",    // Read-only text
+          text: "#E5E5E5",     // Primary Text
         }
       },
       fontFamily: {

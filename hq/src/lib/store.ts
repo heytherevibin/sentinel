@@ -1,7 +1,8 @@
-
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { TelemetryEvent, SensorStatus } from '@/types';
+export type { TelemetryEvent };
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const ALERTS_FILE = path.join(DATA_DIR, 'alerts.json');
@@ -73,6 +74,12 @@ export const db = {
             return defaults;
         }
         return policies;
+    },
+
+    getPolicyVersion: (): string => {
+        const policies = readJson(path.join(DATA_DIR, 'policies.json'), []);
+        if (!policies || policies.length === 0) return 'v0';
+        return crypto.createHash('sha256').update(JSON.stringify(policies)).digest('hex').substring(0, 8);
     },
 
     updatePolicies: (policies: any[]) => {

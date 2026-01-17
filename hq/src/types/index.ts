@@ -3,9 +3,11 @@ export type EventType = "CLIPBOARD_BLOCK" | "WINDOW_RISK" | "HEARTBEAT" | "SYSTE
 export interface TelemetryEvent {
     id: string;
     sensorId: string;
-    type: EventType;
+    type: EventType | string;
     timestamp: number;
-    metadata: {
+    hostname?: string;
+    payload?: any;
+    metadata?: {
         contentOverride?: string; // If we blocked content
         windowTitle?: string;
         appName?: string;

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sentinel Sensor Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#3b82f6", // Electric Blue
+                        accent: "#6366f1",  // Indigo
+                        success: "#10b981", // Emerald
+                        warning: "#f59e0b", // Amber
+                        danger: "#ef4444",  // Rose
+                        // Dark variants
+                        "bg-midnight": "#030712",
+                        "card-midnight": "#0f172a",
+                        // Light variants
+                        "bg-cloud": "#f8fafc",
+                        "card-cloud": "#ffffff",
+                        "glass-white": "rgba(255, 255, 255, 0.02)",
+                        "glass-border": "rgba(255, 255, 255, 0.05)",
+                    },
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        'none': '0',
+                        'sm': '2px',
+                        'md': '4px',
+                    },
+                },
+            },
+        };
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer base {
+            :root {
+                --theme-bg: #f8fafc;
+                --theme-text: #0f172a;
+                --theme-card: #ffffff;
+                --theme-border: rgba(0, 0, 0, 0.05);
+                --theme-sub: #64748b;
+                --theme-glass: rgba(255, 255, 255, 0.7);
+            }
+            .dark {
+                --theme-bg: #030712;
+                --theme-text: #f1f5f9;
+                --theme-card: #0f172a;
+                --theme-border: rgba(255, 255, 255, 0.05);
+                --theme-sub: #475569;
+                --theme-glass: rgba(15, 23, 42, 0.6);
+            }
+            html, body {
+                height: 100%;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                            color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                            border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            html {
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+            }
+            body {
+                background-color: var(--theme-bg);
+                color: var(--theme-text);
+                overflow: hidden;
+            }
+            #root {
+                height: 100%;
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }
+        }
+        
+        .glass-card {
+            background-color: var(--theme-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--theme-border);
+            border-radius: 0px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        
+        .glass-header {
+            background-color: var(--theme-glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--theme-border);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .premium-shadow {
+            box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.05);
+            .dark & {
+                box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.4);
+            }
+            transition: box-shadow 0.4s ease;
+        }
+
+        .glow-blue {
+            filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.3));
+        }
+
+        .glow-emerald {
+            filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.3));
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        @keyframes slide-right {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        .animate-slide-right {
+            animation: slide-right 1.5s infinite linear;
+        }
+
+        /* Border Beam Animation */
+        @property --border-angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false;
+        }
+
+        @keyframes border-rotate {
+            from { --border-angle: 0deg; }
+            to { --border-angle: 360deg; }
+        }
+
+
+        
+        .glass-card::after {
+            content: "";
+            position: absolute;
+            inset: 0; 
+            padding: 1px; 
+            border-radius: inherit; 
+            background: conic-gradient(
+                from var(--border-angle),
+                transparent 25%,
+                rgba(59, 130, 246, 0.1) 80%,
+                rgba(59, 130, 246, 0.6) 94%,
+                transparent 100%
+            );
+            -webkit-mask: 
+                linear-gradient(#fff 0 0) content-box, 
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask: 
+                linear-gradient(#fff 0 0) content-box, 
+                linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            pointer-events: none;
+            animation: border-rotate 4s linear infinite;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .glass-card:hover::after {
+            opacity: 1;
+        }
+    </style>
+
+
+</head>
+
+<body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+
+</html>

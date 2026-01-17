@@ -1,0 +1,60 @@
+{
+  "name": "sentinel-sensor",
+  "private": true,
+  "version": "1.0.0",
+  "main": "electron/main.js",
+  "description": "Sentinel Sensor - Menu bar app for connecting to HQ server",
+  "author": "Sentinel",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "electron:build": "vite build && electron-builder --mac",
+    "electron:start": "electron ."
+  },
+  "build": {
+    "appId": "com.sentinel.sensor",
+    "productName": "Sentinel Sensor",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "dist/**/*",
+      "package.json",
+      "node_modules/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": [
+        "dir",
+        "dmg",
+        "zip"
+      ],
+      "type": "distribution",
+      "identity": null,
+      "extendInfo": {
+        "LSUIElement": true,
+        "NSHighResolutionCapable": true
+      }
+    },
+    "dmg": {
+      "title": "${productName} ${version}"
+    }
+  },
+  "dependencies": {
+    "react-dom": "^19.2.3",
+    "react": "^19.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "concurrently": "^9.1.0",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0",
+    "wait-on": "^8.0.1"
+  }
+}

@@ -6,13 +6,12 @@ import { SensorStatus } from '@/types';
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { id, hostname, version } = body;
+        const { id, hostname, version, policyVersion } = body;
 
         if (!id || !hostname) {
             return NextResponse.json({ error: 'Missing ID or Hostname' }, { status: 400 });
         }
 
-        // Update Status
         // Update Status
         db.updateSensor({
             id,
@@ -26,10 +25,15 @@ export async function POST(request: Request) {
         // Check for pending commands
         const commands = db.popCommands(id);
 
-        // Return active policies + commands
-        const policies = db.getPolicies();
+        // Policy Sync (Delta)
+        const currentPolicyVersion = db.getPolicyVersion();
+        const policies = (policyVersion === currentPolicyVersion) ? null : db.getPolicies();
 
-        return NextResponse.json({ policies, commands });
+        return NextResponse.json({
+            policies,
+            policyVersion: currentPolicyVersion,
+            commands
+        });
     } catch (e) {
         return NextResponse.json({ error: 'Invalid Heartbeat' }, { status: 400 });
     }

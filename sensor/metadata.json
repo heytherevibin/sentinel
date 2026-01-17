@@ -1,0 +1,5 @@
+{
+  "name": "Server Telemetry Dashboard",
+  "description": "A modern, dark-themed server telemetry dashboard that provides a real-time overview of connection status, system health, success rates, and recent activity.",
+  "requestFramePermissions": []
+}
