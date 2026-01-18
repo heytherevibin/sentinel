@@ -14,6 +14,7 @@ export interface TelemetryEvent {
         riskScore?: number;
         user?: string;
         host?: string;
+        message?: string;
     };
 }
 
@@ -29,6 +30,7 @@ export interface PolicyRule {
     id: string;
     name: string;
     pattern: string; // Regex
+    category: string;
     action: "BLOCK" | "LOG_ONLY";
     description: string;
 }

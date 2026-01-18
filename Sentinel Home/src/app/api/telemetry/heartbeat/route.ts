@@ -1,4 +1,6 @@
 
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/store';
 import { SensorStatus } from '@/types';
@@ -13,7 +15,7 @@ export async function POST(request: Request) {
         }
 
         // Update Status
-        db.updateSensor({
+        await db.updateSensor({
             id,
             hostname,
             lastSeen: Date.now(),
@@ -23,11 +25,11 @@ export async function POST(request: Request) {
         console.log(`[HEARTBEAT] ${hostname} (${id}) is ONLINE`);
 
         // Check for pending commands
-        const commands = db.popCommands(id);
+        const commands = await db.popCommands(id);
 
         // Policy Sync (Delta)
-        const currentPolicyVersion = db.getPolicyVersion();
-        const policies = (policyVersion === currentPolicyVersion) ? null : db.getPolicies();
+        const currentPolicyVersion = await db.getPolicyVersion();
+        const policies = (policyVersion === currentPolicyVersion) ? null : await db.getPolicies();
 
         return NextResponse.json({
             policies,
@@ -40,6 +42,7 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
-    const sensors = db.getSensors();
+    await db.addSystemLog('DEBUG', 'API', 'GET /api/telemetry/heartbeat - 200 OK');
+    const sensors = await db.getSensors();
     return NextResponse.json(sensors);
 }

@@ -1,4 +1,6 @@
 
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/store';
 import { TelemetryEvent } from '@/types';
@@ -17,7 +19,7 @@ export async function POST(request: Request) {
             ...body
         };
 
-        db.addAlert(alert);
+        await db.addAlert(alert);
         console.log(`[ALERT] Received from ${alert.sensorId}: ${alert.type}`);
 
         return NextResponse.json({ success: true, id: alert.id });
@@ -27,6 +29,7 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
-    const alerts = db.getAlerts();
+    await db.addSystemLog('DEBUG', 'API', 'GET /api/telemetry/alert - 200 OK');
+    const alerts = await db.getAlerts();
     return NextResponse.json(alerts);
 }

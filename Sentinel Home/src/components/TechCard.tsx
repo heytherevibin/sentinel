@@ -11,7 +11,7 @@ interface TechCardProps {
     toolbar?: React.ReactNode;
 }
 
-export function TechCard({ title, children, className, status = 'normal', toolbar }: TechCardProps) {
+export const TechCard = React.memo(function TechCard({ title, children, className, status = 'normal', toolbar }: TechCardProps) {
     const statusColor = {
         'normal': 'bg-emerald-500',
         'warning': 'bg-amber-500',
@@ -20,7 +20,7 @@ export function TechCard({ title, children, className, status = 'normal', toolba
     }[status];
 
     return (
-        <div className={twMerge("flex flex-col bg-black border border-zinc-700 relative group overflow-hidden", className)}>
+        <div className={twMerge("flex flex-col bg-black border border-zinc-700 relative group overflow-hidden animate-in fade-in duration-700", className)}>
             {/* Mission Control Header */}
             {title && (
                 <div className="flex items-center justify-between px-3 py-2 bg-zinc-900/30 border-b border-zinc-700 select-none">
@@ -55,4 +55,4 @@ export function TechCard({ title, children, className, status = 'normal', toolba
             <div className="absolute bottom-0 right-0 w-2 h-2 border-r border-b border-zinc-600/50"></div>
         </div>
     );
-}
+});

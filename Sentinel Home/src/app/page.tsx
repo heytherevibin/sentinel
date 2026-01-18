@@ -1,15 +1,13 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { ShieldCheck, Activity } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 
 import { SensorList } from '@/components/SensorList';
 import { PolicySummary } from '@/components/PolicySummary';
 import { RiskGauge } from '@/components/RiskGauge';
 import { IncidentLedger } from '@/components/IncidentLedger';
 import { TechCard } from '@/components/TechCard';
-import { TechFooter } from '@/components/TechFooter';
-import { Navigation } from '@/components/Navigation';
 import { TelemetryEvent } from '@/types';
 
 // Initial Chart Placeholder
@@ -69,46 +67,7 @@ export default function Home() {
   const riskScore = Math.min(100, 12 + (stats.threatsBlocked * 15) + (stats.onlineAgents * 2));
 
   return (
-    <main className="h-screen bg-black text-zinc-300 flex flex-col font-mono overflow-hidden selection:bg-emerald-900/30">
-
-      {/* C2 Command Header */}
-      <header className="flex justify-between items-center px-6 py-4 border-b border-zinc-800 bg-black z-20 shrink-0">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 text-emerald-500">
-            <div className="w-8 h-8 bg-emerald-500/10 border border-emerald-500/50 flex items-center justify-center rounded-sm">
-              <Activity size={18} />
-            </div>
-          </div>
-          <div>
-            <h1 className="text-xl font-black tracking-tighter text-white leading-none flex flex-col">
-              <span>SENTINEL</span>
-              <span className="text-[10px] tracking-[0.4em] text-zinc-500 font-bold uppercase">Command_Core</span>
-            </h1>
-          </div>
-        </div>
-
-        {/* Tactical Navigation */}
-        <Navigation />
-
-        <div className="flex gap-12 text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
-          <div className="flex flex-col items-end">
-            <span className="text-[9px] mb-1">Threat_Con</span>
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map(i => (
-                <div key={i} className={`w-1 h-4 skew-x-[-10deg] ${stats.threatsBlocked > 0 && i <= 3 ? 'bg-amber-500' : 'bg-zinc-800'}`} />
-              ))}
-            </div>
-          </div>
-          <div className="flex flex-col items-end">
-            <span className="text-[9px] mb-1">Protocol</span>
-            <span className="text-emerald-500">AES-256-GCM</span>
-          </div>
-          <div className="flex flex-col items-end">
-            <span className="text-[9px] mb-1">Operator</span>
-            <span className="text-white">ANALYST_01</span>
-          </div>
-        </div>
-      </header>
+    <main className="h-full bg-transparent text-zinc-300 flex flex-col font-mono overflow-hidden selection:bg-emerald-900/30 relative">
 
       {/* Main Workspace */}
       <div className="flex-1 p-6 grid grid-cols-12 gap-8 min-h-0 overflow-hidden relative z-10">
@@ -170,8 +129,9 @@ export default function Home() {
                         stroke="#10b981"
                         strokeWidth={2}
                         fill="url(#colorValue)"
-                        dot={{ fill: '#10b981', r: 3 }}
-                        activeDot={{ r: 5 }}
+                        dot={{ fill: '#10b981', r: 4, strokeWidth: 0 }}
+                        activeDot={{ r: 6, strokeWidth: 0 }}
+                        isAnimationActive={false}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -191,10 +151,7 @@ export default function Home() {
 
       </div>
 
-      <TechFooter />
-
-      {/* Decorative Grid Overlay */}
-      <div className="fixed inset-0 pointer-events-none opacity-[0.03] z-0 bg-[url('/grid.svg')] bg-[length:30px_30px]" />
+      <div className="fixed inset-0 pointer-events-none opacity-[0.03] z-[-1] bg-[url('/grid.svg')] bg-[length:30px_30px]" />
     </main>
   );
 }

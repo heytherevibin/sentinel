@@ -1,1 +1,30 @@
-[]
+[
+  {
+    "id": "1768689573397",
+    "sensorId": "c9323f68-89ec-4c8e-94b8-850a8f8a7863",
+    "type": "SYNC",
+    "payload": "full",
+    "queuedAt": 1768689573397
+  },
+  {
+    "id": "1768689577990",
+    "sensorId": "c9323f68-89ec-4c8e-94b8-850a8f8a7863",
+    "type": "SHELL",
+    "payload": "whoami",
+    "queuedAt": 1768689577990
+  },
+  {
+    "id": "1768689579963",
+    "sensorId": "c9323f68-89ec-4c8e-94b8-850a8f8a7863",
+    "type": "ISOLATE",
+    "payload": "enable",
+    "queuedAt": 1768689579963
+  },
+  {
+    "id": "1768689581845",
+    "sensorId": "c9323f68-89ec-4c8e-94b8-850a8f8a7863",
+    "type": "SHELL",
+    "payload": "whoami",
+    "queuedAt": 1768689581845
+  }
+]

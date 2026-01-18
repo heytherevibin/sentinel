@@ -1,0 +1,32 @@
+[
+  {
+    "timestamp": 1768689204914,
+    "type": "INFO",
+    "component": "KERNEL",
+    "message": "Sentinel Core v2.4.1 initialized"
+  },
+  {
+    "timestamp": 1768689205414,
+    "type": "INFO",
+    "component": "DB",
+    "message": "Database connection established (latency: 2ms)"
+  },
+  {
+    "timestamp": 1768689205914,
+    "type": "INFO",
+    "component": "AUTH",
+    "message": "Security subsystem loaded. Enforcing Policy Set #4"
+  },
+  {
+    "timestamp": 1768689206914,
+    "type": "WARN",
+    "component": "NETWORK",
+    "message": "Latency spike detected on ue1-zone-b"
+  },
+  {
+    "timestamp": 1768689207914,
+    "type": "INFO",
+    "component": "SCHEDULER",
+    "message": "Cron jobs synchronized. Next run: +5m"
+  }
+]

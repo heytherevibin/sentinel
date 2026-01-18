@@ -1,30 +1,802 @@
 [
   {
-    "id": "1",
-    "name": "AWS_ACCESS_KEY",
-    "pattern": "AKIA[0-9A-Z]{16}",
+    "id": "edm-1",
+    "category": "EDM & IDM",
+    "name": "Customer Database EDM",
+    "pattern": "EDM_MATCH(First Name + Last Name + SSN)",
     "action": "BLOCK",
-    "description": "Blocks AWS IAM Access Keys"
+    "description": "100% Match against uploaded hashed customer database"
   },
   {
-    "id": "2",
-    "name": "JWT_TOKEN",
-    "pattern": "eyJ[a-zA-Z0-9_\\-\\.]+\\.[a-zA-Z0-9_\\-\\.]+\\.[a-zA-Z0-9_\\-\\.]+",
+    "id": "edm-2",
+    "category": "EDM & IDM",
+    "name": "Employee Masterfile EDM",
+    "pattern": "EDM_MATCH(Employee ID + Bank Account)",
     "action": "BLOCK",
-    "description": "Blocks JSON Web Tokens"
+    "description": "Prevents payroll diversion via HR roster match"
   },
   {
-    "id": "3",
-    "name": "EMAIL_ADDRESS",
-    "pattern": "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}",
+    "id": "idm-1",
+    "category": "EDM & IDM",
+    "name": "Patient Record MRN",
+    "pattern": "IDM_FINGERPRINT(Epic/Cerner Export)",
+    "action": "BLOCK",
+    "description": "Matches exact patient records from EMR exports"
+  },
+  {
+    "id": "edm-3",
+    "category": "EDM & IDM",
+    "name": "High-Value Client List",
+    "pattern": "EDM_EXACT(VIP Client Emails)",
+    "action": "BLOCK",
+    "description": "Blocks top 100 VIP client contact info"
+  },
+  {
+    "id": "idm-2",
+    "category": "EDM & IDM",
+    "name": "Product SKU & Pricing",
+    "pattern": "IDM_MATCH(>50% Master Price Sheet)",
+    "action": "BLOCK",
+    "description": "Fingerprints master pricing Excel sheet"
+  },
+  {
+    "id": "idm-3",
+    "category": "EDM & IDM",
+    "name": "Board Meeting Minutes",
+    "pattern": "IDM_SIMILARITY(>90% Board_Minutes_PDF)",
+    "action": "BLOCK",
+    "description": "Blocks documents 90% similar to board minutes"
+  },
+  {
+    "id": "idm-4",
+    "category": "EDM & IDM",
+    "name": "Standard Operating Procedures",
+    "pattern": "IDM_HASH(Manufacturing_SOPs)",
+    "action": "BLOCK",
+    "description": "Blocks proprietary manufacturing process docs"
+  },
+  {
+    "id": "idm-5",
+    "category": "EDM & IDM",
+    "name": "Source Code Fingerprinting",
+    "pattern": "IDM_PARTIAL(Core Repository Blocks)",
+    "action": "BLOCK",
+    "description": "Matches partial hashes of core repo code"
+  },
+  {
+    "id": "casb-1",
+    "category": "SaaS & CASB",
+    "name": "Salesforce Report Anomaly",
+    "pattern": "ANOMALY(SFDC_Export > 500 rows)",
+    "action": "ALERT",
+    "description": "Alert on large Salesforce report exports"
+  },
+  {
+    "id": "casb-2",
+    "category": "SaaS & CASB",
+    "name": "ServiceNow Incident Dump",
+    "pattern": "DOWNLOAD(SNOW_CSV + \"Description\")",
+    "action": "BLOCK",
+    "description": "Blocks CSV downloads with descriptions from SNOW"
+  },
+  {
+    "id": "casb-3",
+    "category": "SaaS & CASB",
+    "name": "OneDrive External Share",
+    "pattern": "SHARE(Permissions=\"Anyone\" + Tag=\"Internal\")",
+    "action": "BLOCK",
+    "description": "Blocks public links for internal files"
+  },
+  {
+    "id": "casb-4",
+    "category": "SaaS & CASB",
+    "name": "Teams/Slack Guest Upload",
+    "pattern": "UPLOAD(Channel_Has_Guest=True)",
+    "action": "BLOCK",
+    "description": "Blocks uploads to channels with guests"
+  },
+  {
+    "id": "casb-5",
+    "category": "SaaS & CASB",
+    "name": "Zoom Chat Exfiltration",
+    "pattern": "PASTE(Zoom_Chat + Credit_Card)",
+    "action": "BLOCK",
+    "description": "Blocks pasting CC numbers in Zoom chat"
+  },
+  {
+    "id": "casb-6",
+    "category": "SaaS & CASB",
+    "name": "GitHub Public Commit",
+    "pattern": "PUSH(Public_Repo + Internal_Header)",
+    "action": "BLOCK",
+    "description": "Prevents pushing internal headers to public GitHub"
+  },
+  {
+    "id": "casb-7",
+    "category": "SaaS & CASB",
+    "name": "AWS S3 Public ACL",
+    "pattern": "CONFIG(S3_Bucket=\"Public\" + Content=\"Sensitive\")",
+    "action": "REMEDIATE",
+    "description": "Auto-remediates public S3 buckets with sensitive data"
+  },
+  {
+    "id": "casb-8",
+    "category": "SaaS & CASB",
+    "name": "Google Drive Personal",
+    "pattern": "UPLOAD(Target=\"@gmail.com\")",
+    "action": "BLOCK",
+    "description": "Blocks uploads to personal Gmail accounts"
+  },
+  {
+    "id": "casb-9",
+    "category": "SaaS & CASB",
+    "name": "WeTransfer Block",
+    "pattern": "URL_CAT(\"File Sharing/Storage\")",
+    "action": "BLOCK",
+    "description": "Blocks file sharing sites like WeTransfer"
+  },
+  {
+    "id": "casb-10",
+    "category": "SaaS & CASB",
+    "name": "GenAI Paste Control",
+    "pattern": "PASTE(GenAI_URL + (>50 chars Code OR PII))",
+    "action": "BLOCK",
+    "description": "Blocks pasting code/PII into ChatGPT/GenAI"
+  },
+  {
+    "id": "comp-1",
+    "category": "High-Confidence Compliance",
+    "name": "PCI-DSS High Conf",
+    "pattern": "NEAR(CC_Num, Expiry, CVV, 50)",
+    "action": "BLOCK",
+    "description": "Card+Expiry+CVV within 50 chars"
+  },
+  {
+    "id": "comp-2",
+    "category": "High-Confidence Compliance",
+    "name": "PCI-DSS Track Data",
+    "pattern": "REGEX((%B|;)[0-9]{1,19}(\\^|=)[^?]+)",
+    "action": "BLOCK",
+    "description": "Magnetic Stripe Track 1/2 Data"
+  },
+  {
+    "id": "comp-3",
+    "category": "High-Confidence Compliance",
+    "name": "HIPAA ICD-10 + Name",
+    "pattern": "NEAR(ICD10_Code, Patient_Name, 30_words)",
     "action": "LOG_ONLY",
-    "description": "Logs PII (Email)"
+    "description": "Diagnosis code near patient name"
   },
   {
-    "id": "4",
-    "name": "INTERNAL_KEYWORD",
-    "pattern": "(CONFIDENTIAL|SECRET|PROPRIETARY)",
+    "id": "comp-4",
+    "category": "High-Confidence Compliance",
+    "name": "HIPAA Drug + DEA",
+    "pattern": "NEAR(FDA_Drug_List, DEA_Number)",
+    "action": "LOG_ONLY",
+    "description": "Drug name near DEA prescriber number"
+  },
+  {
+    "id": "comp-5",
+    "category": "High-Confidence Compliance",
+    "name": "GDPR EU ID + Keyword",
+    "pattern": "NEAR(EU_National_ID, \"DNI\"|\"NIF\", 20)",
     "action": "BLOCK",
-    "description": "Blocks Corporate Classifications"
+    "description": "EU ID near keyword"
+  },
+  {
+    "id": "comp-6",
+    "category": "High-Confidence Compliance",
+    "name": "GLBA Loan App",
+    "pattern": "NEAR(\"1003\"|\"Loan Application\", SSN)",
+    "action": "BLOCK",
+    "description": "Loan application keywords + SSN"
+  },
+  {
+    "id": "comp-7",
+    "category": "High-Confidence Compliance",
+    "name": "SOX Financials",
+    "pattern": "NEAR(\"10-K\"|\"Unaudited\", Currency_Value)",
+    "action": "BLOCK",
+    "description": "Financial statement keywords near currency"
+  },
+  {
+    "id": "comp-8",
+    "category": "High-Confidence Compliance",
+    "name": "UK Data Protection",
+    "pattern": "REGEX(^[A-CEGHJ-PR-TW-Z][A-CEGHJ-NPR-TW-Z]\\d{6}[A-D]$)",
+    "action": "BLOCK",
+    "description": "UK National Insurance Number (Strict)"
+  },
+  {
+    "id": "comp-9",
+    "category": "High-Confidence Compliance",
+    "name": "PIPEDA SIN",
+    "pattern": "LUHN_CHECK(SIN) AND KEYWORD(\"SIN\")",
+    "action": "BLOCK",
+    "description": "Canadian SIN with Luhn check"
+  },
+  {
+    "id": "comp-10",
+    "category": "High-Confidence Compliance",
+    "name": "Australia TFN",
+    "pattern": "MODULO_CHECK(TFN)",
+    "action": "BLOCK",
+    "description": "Australian Tax File Number"
+  },
+  {
+    "id": "comp-11",
+    "category": "High-Confidence Compliance",
+    "name": "Brazil LGPD",
+    "pattern": "ALGO_CHECK(CPF) AND NEAR(\"CPF\"|\"Cadastro\")",
+    "action": "BLOCK",
+    "description": "Brazil CPF with proximity match"
+  },
+  {
+    "id": "comp-12",
+    "category": "High-Confidence Compliance",
+    "name": "California CCPA",
+    "pattern": "REGEX([A-Z][0-9]{7}) AND NEAR(\"Driver License\")",
+    "action": "BLOCK",
+    "description": "CA Drivers License near keyword"
+  },
+  {
+    "id": "end-1",
+    "category": "Endpoint Controls",
+    "name": "USB Write Block",
+    "pattern": "DEVICE(USB_Serial != Approved_List)",
+    "action": "BLOCK",
+    "description": "Block unapproved USB drives"
+  },
+  {
+    "id": "end-2",
+    "category": "Endpoint Controls",
+    "name": "Bluetooth File Transfer",
+    "pattern": "PROTOCOL(OBEX)",
+    "action": "BLOCK",
+    "description": "Block Bluetooth file transfers"
+  },
+  {
+    "id": "end-3",
+    "category": "Endpoint Controls",
+    "name": "AirDrop Block",
+    "pattern": "FEATURE(AirDrop) AND OS(macOS)",
+    "action": "BLOCK",
+    "description": "Disable AirDrop on managed Macs"
+  },
+  {
+    "id": "end-4",
+    "category": "Endpoint Controls",
+    "name": "Print Sensitive",
+    "pattern": "PRINT(File_Tag=\"Confidential\", Printer=\"Non-Corp\")",
+    "action": "BLOCK",
+    "description": "Block printing confidential docs to home printers"
+  },
+  {
+    "id": "end-5",
+    "category": "Endpoint Controls",
+    "name": "Screen Capture Prot",
+    "pattern": "APP(\"Banking\"|\"HR Portal\") AND ACTION(Screenshot)",
+    "action": "OBSCURE",
+    "description": "Blackout screen on sensitive apps"
+  },
+  {
+    "id": "end-6",
+    "category": "Endpoint Controls",
+    "name": "VDI Copy-Paste",
+    "pattern": "CLIPBOARD(Source=\"VDI\", Dest=\"Host\")",
+    "action": "BLOCK",
+    "description": "Block VDI to Host clipboard copy"
+  },
+  {
+    "id": "end-7",
+    "category": "Endpoint Controls",
+    "name": "Browser Save As",
+    "pattern": "ACTION(\"Save Page As\") AND URL(\"intranet.*\")",
+    "action": "BLOCK",
+    "description": "Block Save As on intranet sites"
+  },
+  {
+    "id": "end-8",
+    "category": "Endpoint Controls",
+    "name": "Optical Burn",
+    "pattern": "DEVICE(CD/DVD_Writer)",
+    "action": "DISABLE",
+    "description": "Disable CD/DVD burning"
+  },
+  {
+    "id": "end-9",
+    "category": "Endpoint Controls",
+    "name": "Drive Encryption",
+    "pattern": "COPY(Dest_Drive_BitLocker=False)",
+    "action": "ALERT",
+    "description": "Alert copying to unencrypted drive"
+  },
+  {
+    "id": "end-10",
+    "category": "Endpoint Controls",
+    "name": "Process Hooking",
+    "pattern": "PROCESS(Unsigned) -> READ_MEM(chrome.exe|outlook.exe)",
+    "action": "ALERT",
+    "description": "Detect malware-like process hooking"
+  },
+  {
+    "id": "ocr-1",
+    "category": "OCR & Image Analysis",
+    "name": "Passport Screenshot",
+    "pattern": "OCR(MRZ_Pattern)",
+    "action": "BLOCK",
+    "description": "Detects Passport MRZ in images"
+  },
+  {
+    "id": "ocr-2",
+    "category": "OCR & Image Analysis",
+    "name": "Credit Card Image",
+    "pattern": "OCR(Raised_Digits_Pattern)",
+    "action": "BLOCK",
+    "description": "Detects Credit Card numbers in photos"
+  },
+  {
+    "id": "ocr-3",
+    "category": "OCR & Image Analysis",
+    "name": "DL Scan",
+    "pattern": "OCR(\"Driver License\" + State_ID_Fmt)",
+    "action": "BLOCK",
+    "description": "Reads Driver License from scanned PDFs"
+  },
+  {
+    "id": "ocr-4",
+    "category": "OCR & Image Analysis",
+    "name": "Whiteboard Confidential",
+    "pattern": "OCR(\"Confidential\"|\"Do Not Distribute\")",
+    "action": "BLOCK",
+    "description": "Detects handwritten confidential markers"
+  },
+  {
+    "id": "ocr-5",
+    "category": "OCR & Image Analysis",
+    "name": "Source Code Screenshot",
+    "pattern": "IMAGE_ANALYSIS(IDE_Syntax_Highlighting)",
+    "action": "BLOCK",
+    "description": "Detects code screenshots"
+  },
+  {
+    "id": "ocr-6",
+    "category": "OCR & Image Analysis",
+    "name": "Sensitive Form Recog",
+    "pattern": "VISUAL_MATCH(W-2_Layout|1099_Layout)",
+    "action": "BLOCK",
+    "description": "ML visual matching of tax forms"
+  },
+  {
+    "id": "adv-1",
+    "category": "Advanced Threat",
+    "name": "Encrypted Archive",
+    "pattern": "FILE_HEADER(Encrypted_Zip_7z)",
+    "action": "BLOCK",
+    "description": "Blocks archives engine cannot open"
+  },
+  {
+    "id": "adv-2",
+    "category": "Advanced Threat",
+    "name": "File Mismatch",
+    "pattern": "MISMATCH(Extension vs Magic_Bytes)",
+    "action": "BLOCK",
+    "description": "e.g. .jpg that is actually .xls"
+  },
+  {
+    "id": "adv-3",
+    "category": "Advanced Threat",
+    "name": "Steganography Tools",
+    "pattern": "APP_HASH(OpenStego, etc)",
+    "action": "BLOCK",
+    "description": "Blocks steganography software"
+  },
+  {
+    "id": "adv-4",
+    "category": "Advanced Threat",
+    "name": "Multipart Archive",
+    "pattern": "EXTENSION(.z01, .z02, .part)",
+    "action": "BLOCK",
+    "description": "Blocks split archives"
+  },
+  {
+    "id": "adv-5",
+    "category": "Advanced Threat",
+    "name": "Recursive Compression",
+    "pattern": "ZIP_DEPTH(>10)",
+    "action": "BLOCK",
+    "description": "Blocks zip bombs"
+  },
+  {
+    "id": "adv-6",
+    "category": "Advanced Threat",
+    "name": "Unknown Binary",
+    "pattern": "HEADER(Unknown/Null)",
+    "action": "BLOCK",
+    "description": "Blocks uploads with no ID header"
+  },
+  {
+    "id": "adv-7",
+    "category": "Advanced Threat",
+    "name": "Slow-Drip Exfil",
+    "pattern": "BEHAVIOR(Sum(Uploads) > 100MB over 8h)",
+    "action": "ALERT",
+    "description": "Detects slow-drip data leak"
+  },
+  {
+    "id": "adv-8",
+    "category": "Advanced Threat",
+    "name": "Shadow IT High Risk",
+    "pattern": "APP_RISK(<40)",
+    "action": "BLOCK",
+    "description": "Blocks low-trust apps (PDF converters, etc)"
+  },
+  {
+    "id": "ml-1",
+    "category": "ML Classifiers",
+    "name": "Source Code ML",
+    "pattern": "ML_MODEL(Code_Syntax_Probability)",
+    "action": "BLOCK",
+    "description": "ML detection of C++, Java, Python, etc"
+  },
+  {
+    "id": "ml-2",
+    "category": "ML Classifiers",
+    "name": "Resume Classifier",
+    "pattern": "ML_MODEL(Resume_Structure)",
+    "action": "LOG_ONLY",
+    "description": "Detects resumes/CVs"
+  },
+  {
+    "id": "ml-3",
+    "category": "ML Classifiers",
+    "name": "Harassment Model",
+    "pattern": "ML_MODEL(Sentiment_Hostile)",
+    "action": "ALERT",
+    "description": "Detects hostility/profanity"
+  },
+  {
+    "id": "ml-4",
+    "category": "ML Classifiers",
+    "name": "Threats & Violence",
+    "pattern": "ML_MODEL(Intent_Harm)",
+    "action": "ALERT",
+    "description": "Detects intent to harm"
+  },
+  {
+    "id": "ml-5",
+    "category": "ML Classifiers",
+    "name": "Discrimination",
+    "pattern": "ML_MODEL(Hate_Speech)",
+    "action": "ALERT",
+    "description": "Detects discriminatory language"
+  },
+  {
+    "id": "ml-6",
+    "category": "ML Classifiers",
+    "name": "Project Documents",
+    "pattern": "ML_MODEL(Internal_Project_Template)",
+    "action": "BLOCK",
+    "description": "Custom trained model for internal docs"
+  },
+  {
+    "id": "ml-7",
+    "category": "ML Classifiers",
+    "name": "Financial Agreements",
+    "pattern": "ML_MODEL(Legal_Contracts_NDA)",
+    "action": "BLOCK",
+    "description": "Identifies contracts/SOWs/NDAs"
+  },
+  {
+    "id": "ml-8",
+    "category": "ML Classifiers",
+    "name": "Tax Documents",
+    "pattern": "ML_MODEL(Global_Tax_Forms)",
+    "action": "BLOCK",
+    "description": "General classifier for tax docs"
+  },
+  {
+    "id": "dev-1",
+    "category": "Developer Secrets",
+    "name": "AWS Access Key",
+    "pattern": "\\bAKIA[0-9A-Z]{16}\\b",
+    "action": "BLOCK",
+    "description": "Standard AWS Access Key"
+  },
+  {
+    "id": "dev-2",
+    "category": "Developer Secrets",
+    "name": "Azure Connection String",
+    "pattern": "DefaultEndpointsProtocol=https;AccountName=...",
+    "action": "BLOCK",
+    "description": "Azure Storage Connection String"
+  },
+  {
+    "id": "dev-3",
+    "category": "Developer Secrets",
+    "name": "Google API Key",
+    "pattern": "\\bAIza[0-9A-Za-z\\-_]{35}\\b",
+    "action": "BLOCK",
+    "description": "Google Cloud API Key"
+  },
+  {
+    "id": "dev-4",
+    "category": "Developer Secrets",
+    "name": "Slack Webhook",
+    "pattern": "hooks\\.slack\\.com/services/T[a-zA-Z0-9_]+/B...",
+    "action": "BLOCK",
+    "description": "Slack Webhook URL"
+  },
+  {
+    "id": "dev-5",
+    "category": "Developer Secrets",
+    "name": "Private Key PEM",
+    "pattern": "-----BEGIN PRIVATE KEY-----",
+    "action": "BLOCK",
+    "description": "Private Key Header"
+  },
+  {
+    "id": "dev-6",
+    "category": "Developer Secrets",
+    "name": "GitHub PAT",
+    "pattern": "ghp_[a-zA-Z0-9]{36}",
+    "action": "BLOCK",
+    "description": "GitHub Personal Access Token"
+  },
+  {
+    "id": "dev-7",
+    "category": "Developer Secrets",
+    "name": "JDBC String",
+    "pattern": "jdbc:(mysql|oracle)://",
+    "action": "BLOCK",
+    "description": "Database Connection String"
+  },
+  {
+    "id": "dev-8",
+    "category": "Developer Secrets",
+    "name": "JWT Token",
+    "pattern": "ey[A-Za-z0-9_-]*\\.[A-Za-z0-9_-]*\\.[A-Za-z0-9_-]*",
+    "action": "BLOCK",
+    "description": "JSON Web Token"
+  },
+  {
+    "id": "dev-9",
+    "category": "Developer Secrets",
+    "name": "Stripe Secret",
+    "pattern": "sk_live_[0-9a-zA-Z]{24}",
+    "action": "BLOCK",
+    "description": "Stripe Live Secret Key"
+  },
+  {
+    "id": "dev-10",
+    "category": "Developer Secrets",
+    "name": "Twilio Token",
+    "pattern": "\\b[a-f0-9]{32}\\b",
+    "action": "BLOCK",
+    "description": "Twilio Auth Token (High Entropy Hex)"
+  },
+  {
+    "id": "email-1",
+    "category": "Email Security",
+    "name": "Reply-All Storm",
+    "pattern": "COUNT(Recipients) > 500 AND ACTION(Reply-All)",
+    "action": "BLOCK",
+    "description": "Prevents Reply-All storms"
+  },
+  {
+    "id": "email-2",
+    "category": "Email Security",
+    "name": "Auto-Forward Gmail",
+    "pattern": "RULE(Forward -> \"@gmail.com\")",
+    "action": "BLOCK",
+    "description": "Blocks auto-forwarding to Gmail"
+  },
+  {
+    "id": "email-3",
+    "category": "Email Security",
+    "name": "BCC Blindspot",
+    "pattern": "COUNT(BCC) > 50",
+    "action": "ALERT",
+    "description": "Alert on excessive BCC usage"
+  },
+  {
+    "id": "email-4",
+    "category": "Email Security",
+    "name": "Ext Recipient + Int Attach",
+    "pattern": "LABEL(\"Internal\") AND RECIPIENT(External)",
+    "action": "ALERT",
+    "description": "Internal attachment to external recipient"
+  },
+  {
+    "id": "email-5",
+    "category": "Email Security",
+    "name": "Subject Keywords",
+    "pattern": "SUBJECT(\"Password\"|\"Secret\"|\"Salary\") AND RECIPIENT(External)",
+    "action": "BLOCK",
+    "description": "Sensitive keywords in subject line"
+  },
+  {
+    "id": "email-6",
+    "category": "Email Security",
+    "name": "Unprotected PII Attach",
+    "pattern": "CONTENT(PII) AND ENCRYPTION(None) AND EXT(.xlsx)",
+    "action": "BLOCK",
+    "description": "Unencrypted Excel with PII"
+  },
+  {
+    "id": "reg-1",
+    "category": "Regional & Industry",
+    "name": "ABA Routing",
+    "pattern": "\\b\\d{9}\\b",
+    "action": "BLOCK",
+    "description": "US ABA Routing Number"
+  },
+  {
+    "id": "reg-2",
+    "category": "Regional & Industry",
+    "name": "IBAN",
+    "pattern": "\\b[A-Z]{2}\\d{2}[A-Z0-9]{4,}\\b",
+    "action": "BLOCK",
+    "description": "International Bank Account Number"
+  },
+  {
+    "id": "reg-3",
+    "category": "Regional & Industry",
+    "name": "SWIFT/BIC",
+    "pattern": "\\b[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?\\b",
+    "action": "BLOCK",
+    "description": "Bank Identifier Code"
+  },
+  {
+    "id": "reg-4",
+    "category": "Regional & Industry",
+    "name": "CUSIP",
+    "pattern": "\\b[0-9A-Z]{9}\\b",
+    "action": "LOG_ONLY",
+    "description": "North American Securities ID"
+  },
+  {
+    "id": "reg-5",
+    "category": "Regional & Industry",
+    "name": "ISIN",
+    "pattern": "\\b[A-Z]{2}[0-9A-Z]{9}\\d\\b",
+    "action": "LOG_ONLY",
+    "description": "International Securities ID"
+  },
+  {
+    "id": "reg-6",
+    "category": "Regional & Industry",
+    "name": "SEDOL",
+    "pattern": "\\b[0-9B-Z]{6}\\d\\b",
+    "action": "LOG_ONLY",
+    "description": "UK Securities Code"
+  },
+  {
+    "id": "reg-7",
+    "category": "Regional & Industry",
+    "name": "US DEA Number",
+    "pattern": "\\b[A-Z]{2}\\d{7}\\b",
+    "action": "BLOCK",
+    "description": "DEA Prescriber Number"
+  },
+  {
+    "id": "reg-8",
+    "category": "Regional & Industry",
+    "name": "US NPI",
+    "pattern": "\\b\\d{10}\\b",
+    "action": "LOG_ONLY",
+    "description": "National Provider Identifier"
+  },
+  {
+    "id": "reg-9",
+    "category": "Regional & Industry",
+    "name": "Mortgage ULI",
+    "pattern": "REGEX(Universal_Loan_Identifier)",
+    "action": "BLOCK",
+    "description": "Unique Loan Identifier"
+  },
+  {
+    "id": "reg-10",
+    "category": "Regional & Industry",
+    "name": "Auto VIN",
+    "pattern": "\\b[A-HJ-NPR-Z0-9]{17}\\b",
+    "action": "LOG_ONLY",
+    "description": "Vehicle Identification Number"
+  },
+  {
+    "id": "ueba-1",
+    "category": "UEBA",
+    "name": "Impossible Travel",
+    "pattern": "GEO_VELOCITY(>500mph)",
+    "action": "ALERT",
+    "description": "Login from distant locations too quickly"
+  },
+  {
+    "id": "ueba-2",
+    "category": "UEBA",
+    "name": "Data Spike",
+    "pattern": "VOLUME > (Avg_Daily * 3)",
+    "action": "ALERT",
+    "description": "300% spike in download volume"
+  },
+  {
+    "id": "ueba-3",
+    "category": "UEBA",
+    "name": "Off-Hours Activity",
+    "pattern": "TIME(02:00-04:00) AND VOLUME(>500MB)",
+    "action": "ALERT",
+    "description": "Large uploads during weird hours"
+  },
+  {
+    "id": "ueba-4",
+    "category": "UEBA",
+    "name": "Dormant Activation",
+    "pattern": "ACCOUNT_AGE(>90 days) -> MOVEMENT(>0)",
+    "action": "ALERT",
+    "description": "Sudden activity in dormant account"
+  },
+  {
+    "id": "ueba-5",
+    "category": "UEBA",
+    "name": "First-Time Admin",
+    "pattern": "ACTION(\"Export All\") AND COUNT(Previous)=0",
+    "action": "ALERT",
+    "description": "First time using mass export"
+  },
+  {
+    "id": "ueba-6",
+    "category": "UEBA",
+    "name": "Flight Risk",
+    "pattern": "VISIT(\"LinkedIn\"|\"Glassdoor\") -> EXPORT(Data)",
+    "action": "BLOCK",
+    "description": "Job hunting followed by exfiltration"
+  },
+  {
+    "id": "meta-1",
+    "category": "Metadata & Classification",
+    "name": "Highly Confidential Share",
+    "pattern": "LABEL(\"Highly Confidential\") AND ACTION(Share_External)",
+    "action": "BLOCK",
+    "description": "Block external sharing of High Conf files"
+  },
+  {
+    "id": "meta-2",
+    "category": "Metadata & Classification",
+    "name": "Internal USB Write",
+    "pattern": "LABEL(\"Internal\") AND DEST(USB)",
+    "action": "BLOCK",
+    "description": "Block writing Internal files to USB"
+  },
+  {
+    "id": "meta-3",
+    "category": "Metadata & Classification",
+    "name": "Legal Hold Modify",
+    "pattern": "LABEL(\"Legal Hold\") AND ACTION(Edit|Delete)",
+    "action": "BLOCK",
+    "description": "Preserve litigation hold files"
+  },
+  {
+    "id": "meta-4",
+    "category": "Metadata & Classification",
+    "name": "Encryption Strip",
+    "pattern": "ACTION(Remove_RMS_Label)",
+    "action": "ALERT",
+    "description": "Detects removal of rights management"
+  },
+  {
+    "id": "meta-5",
+    "category": "Metadata & Classification",
+    "name": "Downgrade Class",
+    "pattern": "CHANGE_LABEL(\"Secret\" -> \"Public\")",
+    "action": "ALERT",
+    "description": "Alert on label downgrades"
+  },
+  {
+    "id": "meta-6",
+    "category": "Metadata & Classification",
+    "name": "Unlabeled Block",
+    "pattern": "UPLOAD(Office_Doc) AND LABEL(None)",
+    "action": "BLOCK",
+    "description": "Enforce classification on upload"
   }
 ]

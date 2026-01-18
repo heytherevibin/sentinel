@@ -1,50 +1,23 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { TechCard } from './TechCard';
 import { Plus, Trash2, ChevronDown, ChevronRight, BrainCircuit } from 'lucide-react';
 import { PolicyRule } from '@/types';
 
+interface PolicyManagerProps {
+    policies: PolicyRule[];
+    isLoading?: boolean;
+    onUpdate: () => void;
+}
+
 // DLP Category Classification
-const categorizePolicy = (policy: PolicyRule): string => {
-    const name = policy.name.toLowerCase();
-    if (name.includes('aws') || name.includes('api') || name.includes('key') || name.includes('token') || name.includes('jwt') || name.includes('secret')) {
-        return 'Credentials';
-    }
-    if (name.includes('email') || name.includes('ssn') || name.includes('phone') || name.includes('address')) {
-        return 'PII';
-    }
-    if (name.includes('python') || name.includes('javascript') || name.includes('code') || name.includes('source')) {
-        return 'Source Code';
-    }
-    if (name.includes('credit') || name.includes('card') || name.includes('bank') || name.includes('financial')) {
-        return 'Financial';
-    }
-    return 'Other';
-};
+// DEPRECATED: Now using explicit policy.category
 
-export function PolicyManager() {
-    const [policies, setPolicies] = useState<PolicyRule[]>([]);
-    const [loading, setLoading] = useState(true);
+export function PolicyManager({ policies, isLoading = false, onUpdate }: PolicyManagerProps) {
     const [isAdding, setIsAdding] = useState(false);
-    const [newPolicy, setNewPolicy] = useState<Partial<PolicyRule>>({ name: '', pattern: '', action: 'BLOCK' });
-    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['Credentials', 'PII', 'Source Code', 'Financial']));
-
-    useEffect(() => {
-        fetchPolicies();
-    }, []);
-
-    const fetchPolicies = async () => {
-        try {
-            const res = await fetch('/api/policy');
-            const data = await res.json();
-            setPolicies(data);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const [newPolicy, setNewPolicy] = useState<Partial<PolicyRule>>({ name: '', pattern: '', action: 'BLOCK', category: 'General' });
+    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
     const handleSave = async () => {
         if (!newPolicy.name || !newPolicy.pattern) return;
@@ -55,29 +28,35 @@ export function PolicyManager() {
                 id: Date.now().toString(),
                 name: newPolicy.name,
                 pattern: newPolicy.pattern,
+                category: newPolicy.category || 'General',
                 action: newPolicy.action as 'BLOCK' | 'LOG_ONLY',
                 description: 'User Defined'
             }
         ];
 
-        await savePolicies(updated);
-        setNewPolicy({ name: '', pattern: '', action: 'BLOCK' });
-        setIsAdding(false);
-    };
-
-    const handleDelete = async (id: string) => {
-        const updated = policies.filter(p => p.id !== id);
-        await savePolicies(updated);
-    };
-
-    const savePolicies = async (updated: PolicyRule[]) => {
         try {
             await fetch('/api/policy', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updated)
             });
-            setPolicies(updated);
+            onUpdate();
+            setNewPolicy({ name: '', pattern: '', action: 'BLOCK', category: 'General' });
+            setIsAdding(false);
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        const updated = policies.filter(p => p.id !== id);
+        try {
+            await fetch('/api/policy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updated)
+            });
+            onUpdate();
         } catch (e) {
             console.error(e);
         }
@@ -95,14 +74,13 @@ export function PolicyManager() {
 
     // Group policies by category
     const groupedPolicies = policies.reduce((acc, policy) => {
-        const category = categorizePolicy(policy);
+        const category = policy.category || 'Other';
         if (!acc[category]) acc[category] = [];
         acc[category].push(policy);
         return acc;
     }, {} as Record<string, PolicyRule[]>);
 
-    const categoryOrder = ['Credentials', 'PII', 'Source Code', 'Financial', 'Other'];
-    const sortedCategories = categoryOrder.filter(cat => groupedPolicies[cat]);
+    const sortedCategories = Object.keys(groupedPolicies).sort();
 
     return (
         <TechCard title="Policy Management Engine" className="flex-1 min-h-0 flex flex-col"
@@ -200,7 +178,7 @@ export function PolicyManager() {
                     })}
                 </div>
 
-                {policies.length === 0 && !loading && (
+                {policies.length === 0 && !isLoading && (
                     <div className="h-full flex flex-col items-center justify-center text-zinc-700 gap-2">
                         <BrainCircuit className="w-8 h-8 opacity-20" />
                         <div className="text-[10px] tracking-widest uppercase">No Active Policies</div>

@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { BrainCircuit, CircuitBoard, Server, RefreshCw, Terminal, Activity } from 'lucide-react';
+import { CircuitBoard, Server, RefreshCw, Terminal, Command, Shield, Zap, Activity, Brain } from 'lucide-react';
 import { TechCard } from '@/components/TechCard';
 import { Navigation } from '@/components/Navigation';
 import Link from 'next/link';
+import { PolicyStructureDiagram } from '@/components/PolicyStructureDiagram';
 
 export default function PolicyForge() {
     const [policies, setPolicies] = useState<any[]>([]);
@@ -65,38 +66,9 @@ export default function PolicyForge() {
     };
 
     return (
-        <div className="min-h-screen bg-black text-zinc-300 font-mono selection:bg-emerald-900/50 flex flex-col">
-
-            {/* C2 Command Header */}
-            <header className="flex justify-between items-center px-6 py-4 border-b border-zinc-800 bg-black z-20 shrink-0">
-                <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2 text-emerald-500">
-                        <div className="w-8 h-8 bg-emerald-500/10 border border-emerald-500/50 flex items-center justify-center rounded-sm">
-                            <BrainCircuit size={18} />
-                        </div>
-                    </div>
-                    <div>
-                        <h1 className="text-xl font-black tracking-tighter text-white leading-none flex flex-col">
-                            <span>SENTINEL</span>
-                            <span className="text-[10px] tracking-[0.4em] text-zinc-500 font-bold uppercase">Neural_Forge</span>
-                        </h1>
-                    </div>
-                </div>
-
-                {/* Tactical Navigation */}
-                <Navigation />
-
-                <div className="flex gap-12 text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
-                    <div className="flex flex-col items-end">
-                        <span className="text-[9px] mb-1">Version</span>
-                        <span className="text-emerald-500">{activeVersion}</span>
-                    </div>
-                    <div className="flex flex-col items-end">
-                        <span className="text-[9px] mb-1">Operator</span>
-                        <span className="text-white">ANALYST_01</span>
-                    </div>
-                </div>
-            </header>
+        <div className="h-full bg-transparent text-zinc-300 font-mono flex flex-col relative overflow-hidden">
+            {/* Mesh Grid Background */}
+            <div className="fixed inset-0 pointer-events-none opacity-[0.03] z-[-1] bg-[url('/grid.svg')] bg-[length:30px_30px]" />
 
             <div className="flex-1 p-6">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -170,7 +142,7 @@ export default function PolicyForge() {
 
                                 {policies.length === 0 ? (
                                     <div className="h-full flex flex-col items-center justify-center text-zinc-700 gap-2">
-                                        <CircuitBoard className="w-12 h-12 opacity-20" />
+                                        <Brain size={18} className="text-white group-hover:scale-110 transition-transform" />
                                         <span className="text-[10px] tracking-widest uppercase">No Active Protocols</span>
                                     </div>
                                 ) : (

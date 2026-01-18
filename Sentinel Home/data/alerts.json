@@ -1,5 +1,17 @@
 [
   {
+    "id": "813c24c1-0666-47b5-a4d7-729549de8ef8",
+    "timestamp": 1768687527976,
+    "sensorId": "c9323f68-89ec-4c8e-94b8-850a8f8a7863",
+    "type": "CLIPBOARD_BLOCK",
+    "metadata": {
+      "policyId": "reg-3",
+      "policyName": "SWIFT/BIC",
+      "contentSnippet": "http://localhost:300...",
+      "host": "Vibins-MacBook-Pro.local"
+    }
+  },
+  {
     "id": "ea16c2f8-1940-4807-b3ed-3116290a2473",
     "timestamp": 1768678113064,
     "sensorId": "c9323f68-89ec-4c8e-94b8-850a8f8a7863",

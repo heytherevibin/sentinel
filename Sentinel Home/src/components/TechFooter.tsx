@@ -1,8 +1,11 @@
+'use client';
 
 import { Activity, Lock } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useSentinel } from './SentinelProvider';
 
 export function TechFooter() {
+    const { uptime } = useSentinel();
     const [sessionId, setSessionId] = useState("INITIALIZING...");
 
     useEffect(() => {

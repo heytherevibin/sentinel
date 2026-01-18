@@ -17,7 +17,11 @@ export function PolicySummary() {
         try {
             const res = await fetch('/api/policy');
             const data = await res.json();
-            setPolicies(data);
+            if (Array.isArray(data)) {
+                setPolicies(data);
+            } else {
+                setPolicies([]);
+            }
         } catch (e) {
             console.error(e);
         } finally {

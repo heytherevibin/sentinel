@@ -42,7 +42,12 @@ class SensorManager {
     }
 
     this.isRunning = true;
-    this.sendHeartbeat();
+    this.sendHeartbeat().then(() => {
+      if (this.connectionStatus === 'ONLINE') {
+        this.sendAlert('SYSTEM_STARTUP', { message: 'Sensor service initialized', version: this.version });
+      }
+    });
+
     this.fetchGlobalStats();
     this.fetchRecentAlerts();
     this.startClipboardMonitor();
@@ -216,16 +221,17 @@ class SensorManager {
     for (const url of candidates) {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 1000); // 1s timeout
+        const timeoutId = setTimeout(() => controller.abort(), 1000);
 
-        const response = await fetch(`${url}/api/stats`, { signal: controller.signal });
+        const response = await fetch(`${url}/api/system/health`, { signal: controller.signal });
         clearTimeout(timeoutId);
 
         if (response.ok) {
-          return url;
+          const health = await response.json();
+          if (health.status === 'HEALTHY') return url;
         }
       } catch (e) {
-        // Continue to next candidate
+        // Continue
       }
     }
     return null;
@@ -253,8 +259,12 @@ class SensorManager {
     if (!this.isRunning) return;
 
     const startTime = Date.now();
+    const timeout = 5000; // 5s timeout
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+
       const response = await fetch(`${this.hqServerUrl}/api/telemetry/heartbeat`, {
         method: 'POST',
         headers: {
@@ -264,12 +274,15 @@ class SensorManager {
           id: this.sensorId,
           hostname: this.hostname,
           version: this.version,
-          policyVersion: this.policyVersion // Send current version
+          policyVersion: this.policyVersion
         }),
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
+
       const latency = Date.now() - startTime;
-      this.lastLatency = latency / 1000; // Convert to seconds
+      this.lastLatency = latency / 1000;
 
       if (response.ok) {
         const data = await response.json();
@@ -277,23 +290,20 @@ class SensorManager {
         this.lastHeartbeat = new Date();
         this.heartbeatCount++;
         this.successCount++;
+        this.retryDelay = 5000; // Reset delay on success
 
-        // Delta Sync Logic
         if (data.policies) {
-          console.log(`[SENSOR] Policy Update: ${this.policyVersion || 'None'} -> ${data.policyVersion}`);
+          console.log(`[SENSOR] Policy Sync: ${data.policyVersion}`);
           this.policies = data.policies;
           this.policyVersion = data.policyVersion;
-          this.saveConfig(); // Persist new version
+          this.saveConfig();
         }
 
-        // Calculate system health (0-100) based on success rate and latency
-        const successRate = this.heartbeatCount > 0
-          ? this.successCount / this.heartbeatCount
-          : 0;
-        const latencyScore = Math.max(0, 1.0 - (this.lastLatency / 5.0)); // 5s = 0, 0s = 1
+        const successRate = this.successCount / this.heartbeatCount;
+        const latencyScore = Math.max(0, 1.0 - (this.lastLatency / 5.0));
         this.systemHealth = (successRate * 0.7 + latencyScore * 0.3) * 100;
 
-        console.log(`[SENSOR] Heartbeat sent successfully. Latency: ${latency}ms`);
+        console.log(`[SENSOR] Heartbeat OK (${latency}ms)`);
       } else {
         throw new Error(`HTTP ${response.status}`);
       }
@@ -302,13 +312,21 @@ class SensorManager {
       this.heartbeatCount++;
       this.lastHeartbeat = new Date();
 
-      // Update system health based on success rate only
-      const successRate = this.heartbeatCount > 0
-        ? this.successCount / this.heartbeatCount
-        : 0;
+      // Exponential backoff: Max 30s
+      this.retryDelay = Math.min(30000, (this.retryDelay || 5000) * 1.5);
+
+      const successRate = this.successCount / this.heartbeatCount;
       this.systemHealth = successRate * 100;
 
-      console.error(`[SENSOR] Heartbeat failed:`, error.message);
+      console.error(`[SENSOR] Heartbeat Fail: ${error.message}. Retrying in ${Math.round(this.retryDelay / 1000)}s`);
+
+      // Reschedule next heartbeat with backoff
+      if (this.heartbeatInterval) clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = setInterval(() => {
+        this.sendHeartbeat();
+        this.fetchGlobalStats();
+        this.fetchRecentAlerts();
+      }, this.retryDelay);
     }
   }
 
@@ -346,6 +364,7 @@ class SensorManager {
       const event = {
         id: this.generateUUID(),
         sensorId: this.sensorId,
+        hostname: this.hostname,
         type,
         timestamp: Date.now(),
         metadata,
