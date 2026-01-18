@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { TechCard } from './TechCard';
 import { Plus, Trash2, ChevronDown, ChevronRight, BrainCircuit } from 'lucide-react';
 import { PolicyRule } from '@/types';
+import { Skeleton } from './Skeleton';
 
 interface PolicyManagerProps {
     policies: PolicyRule[];
@@ -126,56 +127,74 @@ export function PolicyManager({ policies, isLoading = false, onUpdate }: PolicyM
                 )}
 
                 <div className="space-y-3">
-                    {sortedCategories.map(category => {
-                        const isExpanded = expandedCategories.has(category);
-                        const categoryPolicies = groupedPolicies[category];
-
-                        return (
-                            <div key={category} className="border border-zinc-800 rounded-sm overflow-hidden">
-                                {/* Category Header */}
-                                <button
-                                    onClick={() => toggleCategory(category)}
-                                    className="w-full flex items-center justify-between px-3 py-2 bg-zinc-900/50 hover:bg-zinc-900/70 transition-colors"
-                                >
-                                    <div className="flex items-center gap-2">
-                                        {isExpanded ? <ChevronDown size={14} className="text-zinc-500" /> : <ChevronRight size={14} className="text-zinc-500" />}
-                                        <span className="text-[10px] font-bold tracking-widest uppercase text-zinc-400">{category}</span>
+                    {isLoading ? (
+                        Array.from({ length: 3 }).map((_, i) => (
+                            <div key={i} className="border border-zinc-900 rounded-sm overflow-hidden">
+                                <div className="px-3 py-2 bg-zinc-900/20 flex justify-between items-center">
+                                    <div className="flex gap-2 items-center"><Skeleton width={15} height={15} /><Skeleton width={80} height={10} /></div>
+                                    <Skeleton width={20} height={10} />
+                                </div>
+                                <div className="p-3 space-y-2">
+                                    <div className="flex justify-between">
+                                        <Skeleton width={100} height={10} />
+                                        <Skeleton width={40} height={10} />
                                     </div>
-                                    <span className="text-[9px] px-2 py-0.5 bg-zinc-800 text-zinc-500 rounded-sm font-mono">
-                                        {categoryPolicies.length}
-                                    </span>
-                                </button>
-
-                                {/* Category Policies */}
-                                {isExpanded && (
-                                    <div className="bg-black/30">
-                                        {categoryPolicies.map((policy, idx) => (
-                                            <div
-                                                key={policy.id}
-                                                className={`group flex justify-between items-center px-3 py-2 hover:bg-zinc-900/30 transition-colors ${idx !== categoryPolicies.length - 1 ? 'border-b border-zinc-900' : ''}`}
-                                            >
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <span className="font-bold text-[10px] text-zinc-300 tracking-wide">{policy.name}</span>
-                                                        <span className={`text-[8px] px-1.5 py-0.5 rounded-sm font-mono ${policy.action === 'BLOCK' ? 'bg-rose-500/20 text-rose-500' : 'bg-amber-500/20 text-amber-500'}`}>
-                                                            {policy.action}
-                                                        </span>
-                                                    </div>
-                                                    <div className="text-[9px] text-zinc-600 truncate font-mono">{policy.pattern}</div>
-                                                </div>
-                                                <button
-                                                    onClick={() => handleDelete(policy.id)}
-                                                    className="opacity-0 group-hover:opacity-100 p-1.5 hover:text-rose-500 text-zinc-600 transition-all ml-2"
-                                                >
-                                                    <Trash2 size={12} />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
+                                    <Skeleton width="80%" height={8} />
+                                </div>
                             </div>
-                        );
-                    })}
+                        ))
+                    ) : (
+                        sortedCategories.map(category => {
+                            const isExpanded = expandedCategories.has(category);
+                            const categoryPolicies = groupedPolicies[category];
+
+                            return (
+                                <div key={category} className="border border-zinc-800 rounded-sm overflow-hidden">
+                                    {/* Category Header */}
+                                    <button
+                                        onClick={() => toggleCategory(category)}
+                                        className="w-full flex items-center justify-between px-3 py-2 bg-zinc-900/50 hover:bg-zinc-900/70 transition-colors"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            {isExpanded ? <ChevronDown size={14} className="text-zinc-500" /> : <ChevronRight size={14} className="text-zinc-500" />}
+                                            <span className="text-[10px] font-bold tracking-widest uppercase text-zinc-400">{category}</span>
+                                        </div>
+                                        <span className="text-[9px] px-2 py-0.5 bg-zinc-800 text-zinc-500 rounded-sm font-mono">
+                                            {categoryPolicies.length}
+                                        </span>
+                                    </button>
+
+                                    {/* Category Policies */}
+                                    {isExpanded && (
+                                        <div className="bg-black/30">
+                                            {categoryPolicies.map((policy, idx) => (
+                                                <div
+                                                    key={policy.id}
+                                                    className={`group flex justify-between items-center px-3 py-2 hover:bg-zinc-900/30 transition-colors ${idx !== categoryPolicies.length - 1 ? 'border-b border-zinc-900' : ''}`}
+                                                >
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className="font-bold text-[10px] text-zinc-300 tracking-wide">{policy.name}</span>
+                                                            <span className={`text-[8px] px-1.5 py-0.5 rounded-sm font-mono ${policy.action === 'BLOCK' ? 'bg-rose-500/20 text-rose-500' : 'bg-amber-500/20 text-amber-500'}`}>
+                                                                {policy.action}
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-[9px] text-zinc-600 truncate font-mono">{policy.pattern}</div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleDelete(policy.id)}
+                                                        className="opacity-0 group-hover:opacity-100 p-1.5 hover:text-rose-500 text-zinc-600 transition-all ml-2"
+                                                    >
+                                                        <Trash2 size={12} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })
+                    )}
                 </div>
 
                 {policies.length === 0 && !isLoading && (

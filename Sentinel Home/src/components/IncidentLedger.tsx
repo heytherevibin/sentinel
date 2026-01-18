@@ -2,12 +2,14 @@
 
 import React from 'react';
 import { TelemetryEvent } from '@/types';
+import { Skeleton } from './Skeleton';
 
 interface IncidentLedgerProps {
     alerts: TelemetryEvent[];
+    isLoading?: boolean;
 }
 
-export function IncidentLedger({ alerts }: IncidentLedgerProps) {
+export function IncidentLedger({ alerts, isLoading = false }: IncidentLedgerProps) {
     const [filter, setFilter] = React.useState('');
     const [activeTab, setActiveTab] = React.useState<'ALL' | 'DLP' | 'ANOMALIES'>('ALL');
 
@@ -86,7 +88,18 @@ export function IncidentLedger({ alerts }: IncidentLedgerProps) {
                         </tr>
                     </thead>
                     <tbody className="font-mono text-[10px]">
-                        {filteredAlerts.length === 0 ? (
+                        {isLoading ? (
+                            Array.from({ length: 10 }).map((_, i) => (
+                                <tr key={i} className="border-b border-zinc-900 transition-colors group">
+                                    <td className="py-3 pl-2"><Skeleton width={40} height={12} /></td>
+                                    <td className="py-3"><Skeleton width={60} height={10} /></td>
+                                    <td className="py-3"><Skeleton width={80} height={10} /></td>
+                                    <td className="py-3"><Skeleton width="80%" height={10} /></td>
+                                    <td className="py-3"><Skeleton width={50} height={10} /></td>
+                                    <td className="py-3 pr-2"><div className="flex justify-end"><Skeleton width={60} height={12} /></div></td>
+                                </tr>
+                            ))
+                        ) : filteredAlerts.length === 0 ? (
                             <tr><td colSpan={6} className="text-center py-8 text-zinc-600">NO INCIDENTS FOUND</td></tr>
                         ) : (
                             filteredAlerts.map((alert, idx) => {

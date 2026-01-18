@@ -1,28 +1,32 @@
-
 'use client';
 import { useEffect, useState } from 'react';
 import { SensorStatus } from '@/types';
 import { TechCard } from './TechCard';
 import { SquareTerminal, Unlink, RefreshCw } from 'lucide-react';
+import { Skeleton } from './Skeleton';
 
 export function SensorList() {
     const [sensors, setSensors] = useState<SensorStatus[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const fetchSensors = async () => {
+        try {
+            const res = await fetch('/api/telemetry/heartbeat');
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                const sorted = [...data].sort((a: SensorStatus, b: SensorStatus) =>
+                    (a.hostname || '').localeCompare(b.hostname || '')
+                );
+                setSensors(sorted);
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchSensors = async () => {
-            try {
-                const res = await fetch('/api/telemetry/heartbeat');
-                const data = await res.json();
-                if (Array.isArray(data)) {
-                    const sorted = [...data].sort((a: SensorStatus, b: SensorStatus) =>
-                        (a.hostname || '').localeCompare(b.hostname || '')
-                    );
-                    setSensors(sorted);
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        };
         fetchSensors();
         const interval = setInterval(fetchSensors, 5000);
         return () => clearInterval(interval);
@@ -45,7 +49,22 @@ export function SensorList() {
             className="h-full flex flex-col"
         >
             <div className="flex flex-col overflow-y-auto flex-1 min-h-0 pr-1 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-zinc-950 hover:scrollbar-thumb-zinc-700">
-                {sensors.length === 0 ? (
+                {isLoading ? (
+                    <div className="flex flex-col gap-1 p-2">
+                        {Array.from({ length: 8 }).map((_, i) => (
+                            <div key={i} className="flex items-center justify-between p-3 border-b border-zinc-900/30">
+                                <div className="flex items-center gap-2 flex-1">
+                                    <Skeleton width={8} height={8} className="rounded-sm" />
+                                    <Skeleton width="60%" height={10} />
+                                </div>
+                                <div className="flex gap-1">
+                                    <Skeleton width={24} height={24} />
+                                    <Skeleton width={24} height={24} />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : sensors.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center text-zinc-700 gap-2">
                         <Unlink className="w-8 h-8 opacity-20" />
                         <div className="text-[10px] tracking-widest uppercase">No Uplink</div>

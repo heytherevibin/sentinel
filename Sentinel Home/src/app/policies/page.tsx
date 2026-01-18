@@ -6,21 +6,29 @@ import { TechCard } from '@/components/TechCard';
 import { Navigation } from '@/components/Navigation';
 import Link from 'next/link';
 import { PolicyStructureDiagram } from '@/components/PolicyStructureDiagram';
+import { Skeleton } from '@/components/Skeleton';
 
 export default function PolicyForge() {
     const [policies, setPolicies] = useState<any[]>([]);
     const [prompt, setPrompt] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
     const [activeVersion, setActiveVersion] = useState('v1.0.0');
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         fetchPolicies();
     }, []);
 
     const fetchPolicies = async () => {
-        const res = await fetch('/api/telemetry/heartbeat');
-        const data = await res.json();
-        setPolicies(data.policies || []);
+        try {
+            const res = await fetch('/api/telemetry/heartbeat');
+            const data = await res.json();
+            setPolicies(data.policies || []);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleGenerate = async () => {
@@ -140,7 +148,16 @@ export default function PolicyForge() {
                                     <div className="col-span-2 text-right">Action</div>
                                 </div>
 
-                                {policies.length === 0 ? (
+                                {isLoading ? (
+                                    Array.from({ length: 10 }).map((_, i) => (
+                                        <div key={i} className="grid grid-cols-12 gap-2 p-3 border-b border-zinc-900 items-center">
+                                            <div className="col-span-1 flex justify-center"><Skeleton circle width={6} height={6} /></div>
+                                            <div className="col-span-3"><Skeleton width={100} height={10} /></div>
+                                            <div className="col-span-6"><Skeleton width="80%" height={10} /></div>
+                                            <div className="col-span-2 flex justify-end"><Skeleton width={50} height={16} /></div>
+                                        </div>
+                                    ))
+                                ) : policies.length === 0 ? (
                                     <div className="h-full flex flex-col items-center justify-center text-zinc-700 gap-2">
                                         <Brain size={18} className="text-white group-hover:scale-110 transition-transform" />
                                         <span className="text-[10px] tracking-widest uppercase">No Active Protocols</span>

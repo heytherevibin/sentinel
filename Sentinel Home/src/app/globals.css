@@ -47,6 +47,28 @@ body {
   background: #262626;
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 25%, rgba(16, 185, 129, 0.1) 50%, transparent 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+.skeleton-box {
+  background: rgba(39, 39, 42, 0.5);
+  /* zinc-800 */
+  border-radius: 2px;
+}
+
 ::-webkit-scrollbar-thumb:hover {
   background: #FF3333;
 }

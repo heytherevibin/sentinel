@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { TechCard } from '@/components/TechCard';
 import { Settings, User, Shield, Lock, Database, LogOut, Download } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Skeleton } from '@/components/Skeleton';
 
 export default function SettingsPage() {
     const router = useRouter();
@@ -16,6 +17,7 @@ export default function SettingsPage() {
     };
 
     const [logs, setLogs] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         let isMounted = true;
@@ -32,6 +34,8 @@ export default function SettingsPage() {
                 if (isMounted && Array.isArray(data)) setLogs(data);
             } catch (e) {
                 console.error('Log fetch failed', e);
+            } finally {
+                if (isMounted) setIsLoading(false);
             }
         };
 
@@ -142,7 +146,16 @@ export default function SettingsPage() {
                         }
                     >
                         <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-transparent hover:scrollbar-thumb-zinc-700 scrollbar-track-transparent transition-colors p-4 font-mono text-[10px] flex flex-col gap-1">
-                            {logs.length === 0 ? (
+                            {isLoading ? (
+                                Array.from({ length: 8 }).map((_, i) => (
+                                    <div key={i} className="flex gap-3 border-b border-zinc-900/30 pb-1 px-1">
+                                        <Skeleton width={50} height={10} />
+                                        <Skeleton width={40} height={10} />
+                                        <Skeleton width={60} height={10} />
+                                        <Skeleton width="40%" height={10} />
+                                    </div>
+                                ))
+                            ) : logs.length === 0 ? (
                                 <div className="text-zinc-600 italic">No system logs available...</div>
                             ) : (
                                 logs.map((log, idx) => (

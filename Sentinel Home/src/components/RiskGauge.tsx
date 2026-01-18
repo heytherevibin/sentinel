@@ -1,12 +1,29 @@
 import React from 'react';
 import { TechCard } from './TechCard';
+import { Skeleton } from './Skeleton';
 
 interface RiskGaugeProps {
     score: number;
     label?: string;
+    isLoading?: boolean;
 }
 
-export function RiskGauge({ score, label = "GLOBAL THREAT CON" }: RiskGaugeProps) {
+export function RiskGauge({ score, label = "GLOBAL THREAT CON", isLoading = false }: RiskGaugeProps) {
+    if (isLoading) {
+        return (
+            <TechCard title={label} status="normal">
+                <div className="flex items-center gap-4 p-2">
+                    <Skeleton circle width={80} height={80} className="shrink-0" />
+                    <div className="flex flex-col gap-3 flex-1">
+                        <Skeleton height={12} width="80%" />
+                        <Skeleton height={12} width="60%" />
+                        <Skeleton height={4} width="100%" className="mt-2" />
+                    </div>
+                </div>
+            </TechCard>
+        );
+    }
+
     // Color logic
     const getColor = (s: number) => {
         if (s >= 80) return '#f43f5e'; // Rose-500
