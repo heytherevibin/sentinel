@@ -15,15 +15,19 @@ export function IncidentLedger({ alerts, isLoading = false }: IncidentLedgerProp
 
     // Helper to format severity style
     const getSeverityStyle = (type: string) => {
-        if (type === 'CLIPBOARD_BLOCK') return 'bg-c2-danger text-white font-black';
-        if (type.includes('WARN')) return 'bg-c2-secondary text-black font-bold';
-        return 'bg-c2-muted text-white font-medium';
+        if (type === 'CLIPBOARD_BLOCK') return 'bg-rose-500/10 text-rose-500 border-rose-500/20';
+        if (type === 'TERMINAL_COMMAND') return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
+        if (type === 'BROWSER_USAGE') return 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20';
+        if (type.includes('WARN')) return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
+        return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
     };
 
     const filteredAlerts = alerts.filter(alert => {
         // 1. Text Filter
         const payloadText = typeof alert.payload === 'string' ? alert.payload : JSON.stringify(alert.payload || {});
-        const searchContent = `${alert.hostname} ${payloadText} ${alert.type}`.toLowerCase();
+        // Also search metadata
+        const metadataText = JSON.stringify(alert.metadata || {});
+        const searchContent = `${alert.hostname} ${payloadText} ${metadataText} ${alert.type}`.toLowerCase();
         const matchesText = searchContent.includes(filter.toLowerCase());
 
         // 2. Category Filter
@@ -38,106 +42,124 @@ export function IncidentLedger({ alerts, isLoading = false }: IncidentLedgerProp
     });
 
     return (
-        <div className="flex flex-col h-full relative overflow-hidden">
+        <div className="flex flex-col h-full relative overflow-hidden font-mono text-sm">
             {/* Filters */}
-            <div className="flex justify-between items-center mb-4 border-b border-zinc-800 pb-2">
+            <div className="flex justify-between items-center mb-4 border-b border-zinc-800 pb-2 shrink-0">
                 <div className="flex items-center gap-4">
                     <div className="flex gap-1">
                         <button
                             onClick={() => setActiveTab('ALL')}
-                            className={`px-2 py-0.5 text-[9px] border transition-colors ${activeTab === 'ALL' ? 'bg-zinc-800 border-zinc-700 text-white' : 'border-transparent text-zinc-600 hover:text-zinc-400'}`}
+                            className={`px-2 py-1 text-[9px] border transition-colors uppercase font-bold tracking-wider ${activeTab === 'ALL' ? 'bg-zinc-800 border-zinc-700 text-white' : 'border-transparent text-zinc-600 hover:text-zinc-400'}`}
                         >
-                            ALL EVENTS
+                            Global Feed
                         </button>
                         <button
                             onClick={() => setActiveTab('DLP')}
-                            className={`px-2 py-0.5 text-[9px] border transition-colors ${activeTab === 'DLP' ? 'bg-zinc-800 border-zinc-700 text-white' : 'border-transparent text-zinc-600 hover:text-zinc-400'}`}
+                            className={`px-2 py-1 text-[9px] border transition-colors uppercase font-bold tracking-wider ${activeTab === 'DLP' ? 'bg-zinc-800 border-zinc-700 text-white' : 'border-transparent text-zinc-600 hover:text-zinc-400'}`}
                         >
-                            DLP_BLOCK
+                            DLP Violations
                         </button>
                         <button
                             onClick={() => setActiveTab('ANOMALIES')}
-                            className={`px-2 py-0.5 text-[9px] border transition-colors ${activeTab === 'ANOMALIES' ? 'bg-zinc-800 border-zinc-700 text-white' : 'border-transparent text-zinc-600 hover:text-zinc-400'}`}
+                            className={`px-2 py-1 text-[9px] border transition-colors uppercase font-bold tracking-wider ${activeTab === 'ANOMALIES' ? 'bg-zinc-800 border-zinc-700 text-white' : 'border-transparent text-zinc-600 hover:text-zinc-400'}`}
                         >
-                            ANOMALIES
+                            Anomalies
                         </button>
                     </div>
                 </div>
-                <div className="relative">
+                <div className="relative group">
                     <input
                         type="text"
                         value={filter}
                         onChange={(e) => setFilter(e.target.value)}
-                        placeholder="Filter by IP, User, Rule..."
-                        className="bg-black/40 border border-zinc-800 text-[10px] px-2 py-1 w-48 text-zinc-400 focus:border-emerald-500 outline-none placeholder:text-zinc-700"
+                        placeholder="SEARCH BUFFER..."
+                        className="bg-black/40 border border-zinc-800 text-[10px] px-2 py-1 w-48 text-zinc-400 focus:border-emerald-500/50 outline-none placeholder:text-zinc-700 uppercase"
                     />
                 </div>
             </div>
 
-            {/* Table */}
-            <div className="flex-1 overflow-y-auto min-h-0 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-zinc-700 transition-colors">
-                <table className="w-full text-left border-collapse">
-                    <thead className="sticky top-0 bg-black z-10">
-                        <tr className="text-[9px] text-zinc-600 uppercase tracking-widest border-b border-zinc-800">
-                            <th className="py-2 pl-2">Severity</th>
-                            <th className="py-2">Time</th>
-                            <th className="py-2">Source</th>
-                            <th className="py-2">Destination / Details</th>
-                            <th className="py-2">Protocol</th>
-                            <th className="py-2 pr-2 text-right">Risk Score</th>
-                        </tr>
-                    </thead>
-                    <tbody className="font-mono text-[10px]">
-                        {isLoading ? (
-                            Array.from({ length: 10 }).map((_, i) => (
-                                <tr key={i} className="border-b border-zinc-900 transition-colors group">
-                                    <td className="py-3 pl-2"><Skeleton width={40} height={12} /></td>
-                                    <td className="py-3"><Skeleton width={60} height={10} /></td>
-                                    <td className="py-3"><Skeleton width={80} height={10} /></td>
-                                    <td className="py-3"><Skeleton width="80%" height={10} /></td>
-                                    <td className="py-3"><Skeleton width={50} height={10} /></td>
-                                    <td className="py-3 pr-2"><div className="flex justify-end"><Skeleton width={60} height={12} /></div></td>
-                                </tr>
-                            ))
-                        ) : filteredAlerts.length === 0 ? (
-                            <tr><td colSpan={6} className="text-center py-8 text-zinc-600">NO INCIDENTS FOUND</td></tr>
-                        ) : (
-                            filteredAlerts.map((alert, idx) => {
-                                const severity = alert.type === 'CLIPBOARD_BLOCK' ? 'CRITICAL' : 'INFO';
-                                const score = alert.type === 'CLIPBOARD_BLOCK' ? 98 : 12;
-                                return (
-                                    <tr key={idx} className="border-b border-zinc-900 hover:bg-zinc-900/40 transition-colors group">
-                                        <td className="py-2 pl-2">
-                                            <span className={`px-1.5 py-0.5 rounded-[1px] text-[8px] ${getSeverityStyle(alert.type)}`}>
-                                                {severity}
-                                            </span>
-                                        </td>
-                                        <td className="py-2 text-zinc-400 opacity-80">{new Date(alert.timestamp).toLocaleTimeString()}</td>
-                                        <td className="py-2 text-zinc-300 font-bold">{alert.hostname}</td>
-                                        <td className="py-2 text-zinc-400 opacity-70">
-                                            {/* Safely render payload or metadata content */}
-                                            {typeof alert.payload === 'string' ? alert.payload :
-                                                alert.payload?.message || alert.payload?.contentSnippet ||
-                                                alert.metadata?.message || 'System Event'}
-                                        </td>
-                                        <td className="py-2 text-amber-500">HTTPS/443</td>
-                                        <td className="py-2 pr-2 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <div className="w-12 h-1 bg-zinc-800 rounded-full overflow-hidden">
-                                                    <div
-                                                        className={`h-full ${score > 80 ? 'bg-rose-500' : 'bg-emerald-500'}`}
-                                                        style={{ width: `${score}%` }}
-                                                    />
-                                                </div>
-                                                <span className={`font-bold ${score > 80 ? 'text-white' : 'text-zinc-600'}`}>{score}</span>
+            {/* Grid Header */}
+            <div className="grid grid-cols-12 gap-4 px-3 py-2 border-b border-zinc-800 bg-zinc-900/30 text-[9px] font-bold text-zinc-500 uppercase tracking-wider shrink-0">
+                <div className="col-span-2">Severity</div>
+                <div className="col-span-2">Time (UTC)</div>
+                <div className="col-span-2">Source</div>
+                <div className="col-span-4">Event Details</div>
+                <div className="col-span-2 text-right">Risk Score</div>
+            </div>
+
+            {/* Grid Body */}
+            <div className="flex-1 overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
+                <div className="divide-y divide-zinc-800/30">
+                    {isLoading ? (
+                        Array.from({ length: 8 }).map((_, i) => (
+                            <div key={i} className="grid grid-cols-12 gap-4 px-3 py-3 items-center">
+                                <div className="col-span-2"><Skeleton width={40} height={16} /></div>
+                                <div className="col-span-2"><Skeleton width={60} height={10} /></div>
+                                <div className="col-span-2"><Skeleton width={80} height={10} /></div>
+                                <div className="col-span-4"><Skeleton width="90%" height={10} /></div>
+                                <div className="col-span-2"><Skeleton width={30} height={10} className="ml-auto" /></div>
+                            </div>
+                        ))
+                    ) : filteredAlerts.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-12 text-zinc-700 gap-2">
+                            <div className="w-2 h-2 rounded-full bg-emerald-900/50 animate-pulse" />
+                            <span className="text-[10px] uppercase tracking-widest">No Active Incidents</span>
+                        </div>
+                    ) : (
+                        filteredAlerts.map((alert, idx) => {
+                            let severity = 'INFO';
+                            let score = 10;
+
+                            if (alert.type === 'CLIPBOARD_BLOCK') { severity = 'CRITICAL'; score = 98; }
+                            else if (alert.type === 'TERMINAL_COMMAND') { severity = 'HIGH'; score = 75; }
+                            else if (alert.type === 'BROWSER_USAGE') { severity = 'AUDIT'; score = 45; }
+
+                            // Smart Payload Extraction
+                            let details = 'System Event';
+                            if (alert.type === 'BROWSER_USAGE' && alert.metadata?.url) {
+                                details = `Visited: ${alert.metadata.url}`;
+                            } else if (alert.type === 'TERMINAL_COMMAND' && alert.metadata?.command) {
+                                details = `Exec: ${alert.metadata.command}`;
+                            } else if (alert.type === 'CLIPBOARD_BLOCK' && alert.metadata?.contentSnippet) {
+                                details = `Blocked Snippet: ${alert.metadata.contentSnippet}`;
+                            } else if (typeof alert.payload === 'string') {
+                                details = alert.payload;
+                            } else if (alert.metadata?.message) {
+                                details = alert.metadata.message;
+                            }
+
+                            return (
+                                <div key={idx} className="grid grid-cols-12 gap-4 px-3 py-2.5 items-center hover:bg-zinc-900/20 transition-colors group text-[10px]">
+                                    <div className="col-span-2">
+                                        <span className={`px-1.5 py-0.5 rounded-[1px] font-bold tracking-wider border ${getSeverityStyle(alert.type)}`}>
+                                            {severity}
+                                        </span>
+                                    </div>
+                                    <div className="col-span-2 text-zinc-500 font-mono">
+                                        {new Date(alert.timestamp).toLocaleTimeString()}
+                                    </div>
+                                    <div className="col-span-2 text-zinc-300 font-bold truncate">
+                                        {alert.hostname}
+                                    </div>
+                                    <div className="col-span-4 text-zinc-400 truncate opacity-80 group-hover:opacity-100 transition-opacity font-mono" title={details}>
+                                        {details}
+                                    </div>
+                                    <div className="col-span-2 text-right">
+                                        <div className="flex items-center justify-end gap-2">
+                                            <div className="w-12 h-1 bg-zinc-900 rounded-full overflow-hidden">
+                                                <div
+                                                    className={`h-full ${score > 80 ? 'bg-rose-500' : score > 50 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                                                    style={{ width: `${score}%` }}
+                                                />
                                             </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })
-                        )}
-                    </tbody>
-                </table>
+                                            <span className={`font-bold tabular-nums ${score > 80 ? 'text-rose-500' : score > 50 ? 'text-amber-500' : 'text-zinc-600'}`}>{score}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
             </div>
         </div>
     );

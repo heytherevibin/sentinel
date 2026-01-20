@@ -4,9 +4,11 @@ import { usePathname } from 'next/navigation';
 
 const navItems = [
     { href: '/', label: 'COMMAND' },
-    { href: '/policies-management', label: 'POLICY' },
-    { href: '/policies', label: 'NEURAL_AI' },
-    { href: '/reports', label: 'REPORTS' },
+    { href: '/introspection', label: 'INTROSPECT' },
+    { href: '/remediation', label: 'REMEDIATE' },
+    { href: '/sspm', label: 'SSPM' },
+    { href: '/audit', label: 'FORENSICS' },
+    { href: '/neural-ai', label: 'NEURAL_LAB' },
     { href: '/settings', label: 'CONFIG' },
 ];
 

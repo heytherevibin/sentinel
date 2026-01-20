@@ -8,19 +8,25 @@ export interface TelemetryEvent {
     hostname?: string;
     payload?: any;
     metadata?: {
-        contentOverride?: string; // If we blocked content
+        contentOverride?: string;
         windowTitle?: string;
         appName?: string;
         riskScore?: number;
         user?: string;
         host?: string;
         message?: string;
+        // Introspection Specifics
+        url?: string;
+        command?: string;
+        contentSnippet?: string;
+        policyName?: string;
     };
 }
 
 export interface SensorStatus {
     id: string;
     hostname: string;
+    ipAddress?: string;
     lastSeen: number;
     status: "ONLINE" | "OFFLINE" | "WARNING";
     version: string;

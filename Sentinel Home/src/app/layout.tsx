@@ -20,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${jetbrains.variable} font-mono bg-c2-bg text-c2-text antialiased selection:bg-c2-accent selection:text-black relative h-screen overflow-hidden`}>
+      <body className={`${jetbrains.variable} font-mono bg-c2-bg text-c2-text antialiased selection:bg-emerald-500/40 selection:text-emerald-100 relative h-screen overflow-hidden`}>
         <SentinelProvider>
           <div className="flex flex-col h-full relative z-10">
             <Header />

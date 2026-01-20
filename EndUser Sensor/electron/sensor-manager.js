@@ -1,4 +1,5 @@
 const { app, clipboard } = require('electron');
+const { exec } = require('child_process');
 const os = require('os');
 const fs = require('fs').promises;
 const path = require('path');
@@ -51,6 +52,8 @@ class SensorManager {
     this.fetchGlobalStats();
     this.fetchRecentAlerts();
     this.startClipboardMonitor();
+    this.startBrowserMonitor();
+
 
     this.heartbeatInterval = setInterval(() => {
       this.sendHeartbeat();
@@ -117,6 +120,68 @@ class SensorManager {
     } catch (error) {
       console.error('[SENSOR] Clipboard check failed:', error.message);
     }
+  }
+
+  // --- BROWSER MONITORING (Via Window Title) ---
+  startBrowserMonitor() {
+    console.log('[SENSOR] Starting Browser Introspection...');
+    if (this.browserInterval) clearInterval(this.browserInterval);
+
+    this.browserInterval = setInterval(() => {
+      this.checkActiveWindow();
+    }, 2000); // Check every 2s
+  }
+
+  checkActiveWindow() {
+    if (!this.isRunning) return;
+
+    // AppleScript to get active window title
+    const script = `
+      global frontApp, frontAppName, windowTitle
+      set windowTitle to ""
+      tell application "System Events"
+        set frontApp to first application process whose frontmost is true
+        set frontAppName to name of frontApp
+        tell process frontAppName
+          try
+            set windowTitle to value of attribute "AXTitle" of window 1
+          end try
+        end tell
+      end tell
+      return {frontAppName, windowTitle}
+    `;
+
+    exec(`osascript -e '${script}'`, (error, stdout, stderr) => {
+      if (error || !stdout) return;
+
+      const parts = stdout.trim().split(',');
+      if (parts.length < 2) return;
+
+      const appName = parts[0].trim();
+      const title = parts.slice(1).join(',').trim(); // Join back in case title has commas
+
+      // Detect Browsers
+      const browserApps = ['Google Chrome', 'Safari', 'Firefox', 'Brave Browser', 'Arc'];
+      if (browserApps.includes(appName) && title) {
+
+        // Deduplication: Only alert if title changed significantly
+        if (title === this.lastWindowTitle) return;
+        this.lastWindowTitle = title;
+
+        // Check for Search Patterns or just log all browser usage
+        if (title.includes('Google Search') || title.includes('Search') || title.includes('ChatGPT')) {
+          console.log(`[BROWSER] Detected Search: ${title}`);
+
+          // Send Alert
+          this.sendAlert('BROWSER_USAGE', {
+            url: "https://google.com/search?q=" + encodeURIComponent(title), // Simulated URL
+            windowTitle: title,
+            appName: appName,
+            host: this.hostname
+          });
+        }
+      }
+    });
   }
 
   stop() {

@@ -21,6 +21,7 @@ model Alert {
 model Sensor {
   id        String   @id
   hostname  String   @unique
+  ipAddress String?  // Real IP Address
   lastSeen  DateTime
   status    String
   version   String
@@ -33,6 +34,7 @@ model Policy {
   pattern     String
   action      String
   description String
+  updatedAt   DateTime @default(now()) // Added for version tracking
 }
 
 model SystemLog {
@@ -43,10 +45,48 @@ model SystemLog {
   message   String
 }
 
+model SystemConfig {
+  key   String @id
+  value String
+}
+
 model Command {
   id        String   @id @default(uuid())
   sensorId  String
   type      String
   payload   String?
   queuedAt  DateTime @default(now())
+}
+
+model AuditLog {
+  id             String   @id @default(uuid())
+  timestamp      DateTime @default(now())
+  actorId        String
+  actorName      String
+  action         String
+  targetResource String
+  details        Json?
+  severity       String   @default("INFO") // INFO, WARN, CRITICAL
+  hash           String?  // Simulation of cryptographic hash for UI
+}
+
+model Application {
+  id        String   @id @default(uuid())
+  name      String
+  vendor    String
+  instance  String
+  type      String   // Sanctioned, Unsanctioned
+  users     Int      @default(0)
+  cci       Int      @default(0)
+  certs     String[]
+  lastScan  DateTime @default(now())
+  risk      String?
+}
+
+model ApplicationMetric {
+  id        Int      @id @default(autoincrement())
+  timestamp DateTime @default(now())
+  sanctionedCount Int
+  unsanctionedCount Int
+  avgCCI    Int
 }

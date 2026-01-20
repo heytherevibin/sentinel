@@ -1,10 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
+import { prisma } from './prisma';
 import { TelemetryEvent, SensorStatus, PolicyRule } from '@/types';
-
-// Supabase Configuration
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Default Policies
 const DEFAULT_POLICIES = [
@@ -17,37 +12,35 @@ const DEFAULT_POLICIES = [
 export const db = {
     getAlerts: async (): Promise<TelemetryEvent[]> => {
         try {
-            const { data, error } = await supabase
-                .from('Alert')
-                .select('*')
-                .order('timestamp', { ascending: false })
-                .limit(1000);
-
-            if (error) throw error;
-            return (data || []).map((a: any) => ({
+            const alerts = await prisma.alert.findMany({
+                orderBy: { timestamp: 'desc' },
+                take: 1000
+            });
+            return alerts.map(a => ({
                 id: a.id,
-                sensorId: a.sensorId || a.sensorid,
+                sensorId: a.sensorId,
                 type: a.type,
-                timestamp: new Date(a.timestamp).getTime(),
+                timestamp: a.timestamp.getTime(),
                 hostname: a.hostname,
-                payload: a.payload,
-                metadata: a.metadata
+                payload: a.payload as any,
+                metadata: a.metadata as any
             }));
         } catch (e) { return []; }
     },
 
     addAlert: async (alert: TelemetryEvent) => {
         try {
-            const { error } = await supabase.from('Alert').insert({
-                id: alert.id,
-                sensorId: alert.sensorId,
-                type: alert.type,
-                timestamp: new Date(alert.timestamp),
-                hostname: alert.hostname || 'unknown',
-                payload: alert.payload || {},
-                metadata: alert.metadata || {}
+            await prisma.alert.create({
+                data: {
+                    id: alert.id,
+                    sensorId: alert.sensorId,
+                    type: alert.type,
+                    timestamp: new Date(alert.timestamp),
+                    hostname: alert.hostname || 'unknown',
+                    payload: alert.payload || {},
+                    metadata: alert.metadata || {}
+                }
             });
-            if (error) console.error(`[DB_ALERT_ERROR] ${error.message}`);
         } catch (e) {
             console.error(`[DB_ALERT_EXCEPTION]`, e);
         }
@@ -55,13 +48,13 @@ export const db = {
 
     getSensors: async (): Promise<SensorStatus[]> => {
         try {
-            const { data, error } = await supabase.from('Sensor').select('*');
-            if (error) throw error;
-            return (data || []).map((s: any) => ({
+            const sensors = await prisma.sensor.findMany();
+            return sensors.map((s: any) => ({
                 id: s.id,
                 hostname: s.hostname,
-                lastSeen: new Date(s.lastSeen || s.lastseen).getTime(),
-                status: s.status,
+                ipAddress: s.ipAddress || undefined,
+                lastSeen: s.lastSeen.getTime(),
+                status: s.status as any,
                 version: s.version
             }));
         } catch (e) { return []; }
@@ -69,51 +62,65 @@ export const db = {
 
     updateSensor: async (status: SensorStatus) => {
         try {
-            await supabase.from('Sensor').upsert({
-                id: status.id,
-                hostname: status.hostname,
-                lastSeen: new Date(status.lastSeen),
-                status: status.status,
-                version: status.version
-            }, { onConflict: 'hostname' });
+            await prisma.sensor.upsert({
+                where: { hostname: status.hostname },
+                update: {
+                    id: status.id,
+                    lastSeen: new Date(status.lastSeen),
+                    status: status.status,
+                    version: status.version,
+                    ipAddress: status.ipAddress || null
+                },
+                create: {
+                    id: status.id,
+                    hostname: status.hostname,
+                    lastSeen: new Date(status.lastSeen),
+                    status: status.status,
+                    version: status.version,
+                    ipAddress: status.ipAddress || null
+                }
+            });
         } catch (e) { /* Silent Fail */ }
     },
 
     getPolicies: async (): Promise<PolicyRule[]> => {
         try {
-            const { count } = await supabase.from('Policy').select('*', { count: 'exact', head: true });
+            const count = await prisma.policy.count();
             if (count === 0) {
-                await supabase.from('Policy').insert(DEFAULT_POLICIES.map(p => ({
-                    ...p,
-                    updatedAt: new Date()
-                })));
+                await prisma.policy.createMany({
+                    data: DEFAULT_POLICIES.map(p => ({
+                        ...p,
+                        updatedAt: new Date()
+                    }))
+                });
             }
-            const { data, error } = await supabase.from('Policy').select('*');
-            if (error) throw error;
-            return (data || []).map((p: any) => ({
+            const policies = await prisma.policy.findMany();
+            return policies.map((p: any) => ({
                 id: p.id,
                 name: p.name,
                 category: p.category,
                 pattern: p.pattern,
                 description: p.description,
                 action: p.action as "BLOCK" | "LOG_ONLY",
-                updatedAt: p.updatedAt || p.updatedat
+                updatedAt: (p as any).updatedAt ? p.updatedAt.toISOString() : new Date().toISOString()
             }));
         } catch (e) {
-            console.error("Supabase Policy Fetch Error:", e);
+            console.error("Prisma Policy Fetch Error:", e);
             return DEFAULT_POLICIES.map(p => ({
                 ...p,
-                action: p.action as "BLOCK" | "LOG_ONLY"
+                action: p.action as "BLOCK" | "LOG_ONLY",
+                updatedAt: new Date().toISOString()
             }));
         }
     },
 
     getPolicyVersion: async (): Promise<string> => {
         try {
-            const { data } = await supabase.from('Policy').select('*').order('id', { ascending: true });
+            const data = await prisma.policy.findMany({
+                orderBy: { id: 'asc' }
+            });
             if (!data || data.length === 0) return 'v0';
-            // Sort keys to ensure stable hash even if DB column order varies
-            const content = JSON.stringify(data.map((p: any) => ({
+            const content = JSON.stringify(data.map(p => ({
                 id: p.id,
                 name: p.name,
                 category: p.category,
@@ -131,67 +138,62 @@ export const db = {
 
     updatePolicies: async (policies: PolicyRule[]) => {
         try {
-            // Delete all and re-create policies
-            await supabase.from('Policy').delete().neq('id', '0'); // Delete all (NEQ 0 is a hack for delete all without predicate)
-            await supabase.from('Policy').insert(policies.map(p => ({
-                id: p.id,
-                name: p.name,
-                category: p.category,
-                pattern: p.pattern,
-                action: p.action,
-                description: p.description,
-                updatedAt: new Date()
-            })));
+            await prisma.policy.deleteMany();
+            await prisma.policy.createMany({
+                data: policies.map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    category: p.category,
+                    pattern: p.pattern,
+                    action: p.action,
+                    description: p.description,
+                    updatedAt: new Date()
+                }))
+            });
         } catch (e) { /* Silent Fail */ }
     },
 
     queueCommand: async (sensorId: string, type: string, payload: string) => {
         try {
-            await supabase.from('Command').insert({
-                id: crypto.randomUUID(),
-                sensorId,
-                type,
-                payload
+            await prisma.command.create({
+                data: {
+                    sensorId,
+                    type,
+                    payload
+                }
             });
         } catch (e) { /* Silent Fail */ }
     },
 
     popCommands: async (sensorId: string) => {
         try {
-            // Get commands
-            const { data: commands } = await supabase
-                .from('Command')
-                .select('*')
-                .eq('sensorId', sensorId);
-
+            const commands = await prisma.command.findMany({
+                where: { sensorId }
+            });
             if (commands && commands.length > 0) {
-                // Delete them
-                await supabase.from('Command').delete().eq('sensorId', sensorId);
-                return commands;
+                await prisma.command.deleteMany({
+                    where: { sensorId }
+                });
             }
-            return [];
+            return commands;
         } catch (e) { return []; }
     },
 
     getSystemLogs: async (): Promise<any[]> => {
         try {
-            const { data } = await supabase
-                .from('SystemLog')
-                .select('*')
-                .order('timestamp', { ascending: false })
-                .limit(500);
-            return data || [];
+            const logs = await prisma.systemLog.findMany({
+                orderBy: { timestamp: 'desc' },
+                take: 500
+            });
+            return logs;
         } catch (e) { return []; }
     },
 
     addSystemLog: async (type: string, component: string, message: string) => {
         try {
-            const { error } = await supabase.from('SystemLog').insert({
-                type,
-                component,
-                message
+            await prisma.systemLog.create({
+                data: { type, component, message }
             });
-            if (error) console.error(`[DB_LOG_ERROR] ${error.message}`);
         } catch (e) {
             console.error(`[DB_LOG_EXCEPTION]`, e);
         }
@@ -199,22 +201,19 @@ export const db = {
 
     getStats: async () => {
         try {
-            // Parallel fetches
-            const [agents, online, threats, events, policies] = await Promise.all([
-                supabase.from('Sensor').select('*', { count: 'exact', head: true }),
-                supabase.from('Sensor').select('*', { count: 'exact', head: true }).gt('lastSeen', new Date(Date.now() - 60000).toISOString()),
-                supabase.from('Alert').select('*', { count: 'exact', head: true }).eq('type', 'CLIPBOARD_BLOCK'),
-                supabase.from('Alert').select('*', { count: 'exact', head: true }),
-                supabase.from('Policy').select('*', { count: 'exact', head: true })
+            const [totalAgents, onlineAgents, threatsBlocked, totalEvents, activePolicies] = await Promise.all([
+                prisma.sensor.count(),
+                prisma.sensor.count({
+                    where: { lastSeen: { gt: new Date(Date.now() - 60000) } }
+                }),
+                prisma.alert.count({
+                    where: { type: 'CLIPBOARD_BLOCK' }
+                }),
+                prisma.alert.count(),
+                prisma.policy.count()
             ]);
 
-            return {
-                totalAgents: agents.count || 0,
-                onlineAgents: online.count || 0,
-                threatsBlocked: threats.count || 0,
-                totalEvents: events.count || 0,
-                activePolicies: policies.count || 0
-            };
+            return { totalAgents, onlineAgents, threatsBlocked, totalEvents, activePolicies };
         } catch (e) {
             return { totalAgents: 0, onlineAgents: 0, threatsBlocked: 0, totalEvents: 0, activePolicies: 0 };
         }
@@ -222,65 +221,140 @@ export const db = {
 
     getChartData: async () => {
         try {
-            const { data: alerts } = await supabase
-                .from('Alert')
-                .select('timestamp')
-                .gt('timestamp', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
-
-            const data = [];
             const now = new Date();
+            const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+            const [alerts, logs] = await Promise.all([
+                prisma.alert.findMany({
+                    where: { timestamp: { gt: twentyFourHoursAgo } },
+                    select: { timestamp: true }
+                }),
+                prisma.auditLog.findMany({
+                    where: { timestamp: { gt: twentyFourHoursAgo } },
+                    select: { timestamp: true }
+                })
+            ]);
+
+            const hourCounts = new Map<string, number>();
+            const timeline = [];
 
             for (let i = 23; i >= 0; i--) {
                 const d = new Date(now);
                 d.setHours(d.getHours() - i);
-                const hour = d.getHours();
-                const timeLabel = hour.toString().padStart(2, '0') + ':00';
-
-                const baseTraffic = 20 + Math.max(0, Math.sin((hour - 6) / 18 * Math.PI)) * 50;
-                const noise = ((hour * 9301 + 49297) % 233280) % 15;
-
-                const alertCount = (alerts || []).filter((a: any) => {
-                    const ad = new Date(a.timestamp);
-                    return ad.getHours() === hour;
-                }).length;
-
-                const value = Math.floor(baseTraffic + noise + (alertCount * 5));
-                data.push({ name: timeLabel, value });
+                const key = `${d.getDate()}-${d.getHours()}`;
+                const label = `${d.getHours().toString().padStart(2, '0')}:00`;
+                hourCounts.set(key, 0);
+                timeline.push({ key, name: label, value: 0 });
             }
-            return data;
+
+            const processTimestamp = (date: Date) => {
+                const key = `${date.getDate()}-${date.getHours()}`;
+                if (hourCounts.has(key)) {
+                    hourCounts.set(key, (hourCounts.get(key) || 0) + 1);
+                }
+            };
+
+            alerts.forEach(a => processTimestamp(a.timestamp));
+            logs.forEach(l => processTimestamp(l.timestamp));
+
+            return timeline.map(t => ({
+                name: t.name,
+                value: hourCounts.get(t.key) || 0
+            }));
+
         } catch (e) { return []; }
     },
 
     getSystemConfig: async (): Promise<Record<string, any>> => {
         try {
-            const { data } = await supabase.from('SystemConfig').select('*');
-            const config: Record<string, any> = {
-                risk_sensitivity: '75',
-                engine_enabled: 'true',
-                anomaly_threshold: '0.85',
-                model_version: '3.14.0-sentinel'
-            };
-            if (data) {
-                data.forEach((item: any) => {
-                    config[item.key] = item.value;
-                });
+            const config = await (prisma as any).systemConfig.findMany();
+            if (!config || config.length === 0) {
+                return {
+                    risk_sensitivity: '75',
+                    engine_enabled: 'true',
+                    anomaly_threshold: '0.85',
+                    model_version: '3.14.0-sentinel'
+                };
             }
-            return config;
-        } catch (e) { return {}; }
+            return config.reduce((acc: any, curr: any) => ({ ...acc, [curr.key]: curr.value }), {});
+        } catch (e) {
+            return { risk_sensitivity: '75', engine_enabled: 'true' };
+        }
     },
 
     updateSystemConfig: async (key: string, value: string) => {
         try {
-            await supabase.from('SystemConfig').upsert({ key, value });
-        } catch (e) { /* Silent Fail */ }
+            await (prisma as any).systemConfig.upsert({
+                where: { key },
+                update: { value },
+                create: { key, value }
+            });
+        } catch (e) {
+            console.error('Config Update Failed', e);
+        }
     },
 
     checkConnection: async (): Promise<boolean> => {
         try {
-            const { error } = await supabase.from('SystemConfig').select('key').limit(1);
-            return !error;
+            await prisma.$queryRaw`SELECT 1`;
+            return true;
         } catch (e) {
             return false;
         }
+    },
+
+    // Real Impact Analysis (Blast Radius)
+    scanHistoricalLogs: async (pattern: string): Promise<{ matches: number; total: number; impactStats: any[] }> => {
+        try {
+            const [logs, alerts] = await Promise.all([
+                prisma.auditLog.findMany({ orderBy: { timestamp: 'desc' }, take: 500 }),
+                prisma.alert.findMany({ orderBy: { timestamp: 'desc' }, take: 500 })
+            ]);
+
+            const allEvents = [
+                ...logs.map(l => ({ id: l.id, text: JSON.stringify(l), time: l.timestamp })),
+                ...alerts.map(a => ({ id: a.id, text: JSON.stringify(a), time: a.timestamp }))
+            ];
+
+            if (allEvents.length === 0) return { matches: 0, total: 0, impactStats: [] };
+
+            const regex = new RegExp(pattern, 'i');
+            const matches = allEvents.filter(e => regex.test(e.text));
+
+            return {
+                matches: matches.length,
+                total: allEvents.length,
+                impactStats: matches.slice(0, 5)
+            };
+        } catch (e) {
+            console.error("Impact Scan Failed", e);
+            return { matches: 0, total: 0, impactStats: [] };
+        }
+    },
+
+    // Application Inventory Methods
+    getApplications: async () => {
+        try {
+            return await (prisma as any).application.findMany({
+                orderBy: { name: 'asc' }
+            });
+        } catch (e) { return []; }
+    },
+
+    seedInitialApps: async () => {
+        const apps = [
+            { id: 'APP-001', name: 'Google Workspace', vendor: 'Google LLC', instance: 'sentinel-corp.google.com', type: 'Sanctioned', users: 142, cci: 98, certs: ['SOC2', 'ISO27001'] },
+            { id: 'APP-002', name: 'Slack (Corporate)', vendor: 'Salesforce', instance: 'sentinel-team.slack.com', type: 'Sanctioned', users: 138, cci: 92, certs: ['SOC2'] },
+            { id: 'APP-003', name: 'Dropbox (Personal)', vendor: 'Dropbox Inc', instance: 'personal-box', type: 'Unsanctioned', users: 3, cci: 45, risk: 'Exfiltration Risk' },
+            { id: 'APP-004', name: 'ChatGPT Enterprise', vendor: 'OpenAI', instance: 'sentinel.openai.com', type: 'Sanctioned', users: 56, cci: 85, certs: ['SOC2'] },
+            { id: 'APP-005', name: 'WeTransfer', vendor: 'WeTransfer BV', instance: 'public-web', type: 'Unsanctioned', users: 1, cci: 30, risk: 'No Encryption' }
+        ];
+
+        try {
+            const count = await (prisma as any).application.count();
+            if (count === 0) {
+                await (prisma as any).application.createMany({ data: apps });
+            }
+        } catch (e) { console.error("App Seeding Failed", e); }
     }
 };

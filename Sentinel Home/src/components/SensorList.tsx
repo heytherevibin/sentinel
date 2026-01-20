@@ -83,7 +83,7 @@ export function SensorList() {
                                         </span>
                                     </div>
                                     <div className="pl-3.5 flex items-center gap-2 text-[9px] font-mono text-zinc-600">
-                                        <span>10.0.4.{sensor.id.charCodeAt(0) % 255}</span>
+                                        <span>{sensor.ipAddress || 'UNKNOWN_HOST'}</span>
                                         <span className="opacity-20">|</span>
                                         <span className={isOnline ? 'text-emerald-500/80' : 'text-zinc-700'}>{isOnline ? 'LINK_ESTABLISHED' : 'NO_CARRIER'}</span>
                                     </div>
