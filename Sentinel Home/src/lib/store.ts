@@ -63,9 +63,9 @@ export const db = {
     updateSensor: async (status: SensorStatus) => {
         try {
             await prisma.sensor.upsert({
-                where: { hostname: status.hostname },
+                where: { id: status.id },
                 update: {
-                    id: status.id,
+                    hostname: status.hostname,
                     lastSeen: new Date(status.lastSeen),
                     status: status.status,
                     version: status.version,
@@ -80,7 +80,9 @@ export const db = {
                     ipAddress: status.ipAddress || null
                 }
             });
-        } catch (e) { /* Silent Fail */ }
+        } catch (e) {
+            console.error('[DB_SENSOR_UPSERT_FAIL]', e);
+        }
     },
 
     getPolicies: async (): Promise<PolicyRule[]> => {
@@ -102,7 +104,7 @@ export const db = {
                 pattern: p.pattern,
                 description: p.description,
                 action: p.action as "BLOCK" | "LOG_ONLY",
-                updatedAt: (p as any).updatedAt ? p.updatedAt.toISOString() : new Date().toISOString()
+                updatedAt: p.updatedAt ? p.updatedAt.toISOString() : new Date().toISOString()
             }));
         } catch (e) {
             console.error("Prisma Policy Fetch Error:", e);
@@ -138,19 +140,23 @@ export const db = {
 
     updatePolicies: async (policies: PolicyRule[]) => {
         try {
-            await prisma.policy.deleteMany();
-            await prisma.policy.createMany({
-                data: policies.map(p => ({
-                    id: p.id,
-                    name: p.name,
-                    category: p.category,
-                    pattern: p.pattern,
-                    action: p.action,
-                    description: p.description,
-                    updatedAt: new Date()
-                }))
+            await prisma.$transaction(async (tx) => {
+                await tx.policy.deleteMany();
+                await tx.policy.createMany({
+                    data: policies.map(p => ({
+                        id: p.id,
+                        name: p.name,
+                        category: p.category,
+                        pattern: p.pattern,
+                        action: p.action,
+                        description: p.description,
+                        updatedAt: new Date()
+                    }))
+                });
             });
-        } catch (e) { /* Silent Fail */ }
+        } catch (e) {
+            console.error('[DB_POLICY_SYNC_FAIL]', e);
+        }
     },
 
     queueCommand: async (sensorId: string, type: string, payload: string) => {
@@ -170,13 +176,20 @@ export const db = {
             const commands = await prisma.command.findMany({
                 where: { sensorId }
             });
+
             if (commands && commands.length > 0) {
+                // Atomic delete of ONLY the fetched commands
                 await prisma.command.deleteMany({
-                    where: { sensorId }
+                    where: {
+                        id: { in: commands.map(c => c.id) }
+                    }
                 });
             }
             return commands;
-        } catch (e) { return []; }
+        } catch (e) {
+            console.error('[DB_CMD_POP_FAIL]', e);
+            return [];
+        }
     },
 
     getSystemLogs: async (): Promise<any[]> => {
