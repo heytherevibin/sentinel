@@ -45,10 +45,10 @@ export default function SSPMPage() {
         <main className="h-full bg-transparent text-zinc-300 flex flex-col font-mono overflow-hidden selection:bg-blue-950/30 relative">
 
             {/* Posture Command Center Grid (12-col) */}
-            <div className="flex-1 p-6 grid grid-cols-12 gap-8 min-h-0 overflow-hidden relative z-10">
+            <div className="flex-1 p-3 md:p-4 lg:p-6 grid grid-cols-12 gap-4 lg:gap-8 min-h-0 overflow-y-auto lg:overflow-hidden relative z-10">
 
-                {/* Left Sidebar: Posture Metrics (3 cols) */}
-                <div className="col-span-12 md:col-span-3 flex flex-col gap-8 min-h-0">
+                {/* Left Sidebar: Posture Metrics (Stacks on Tablet, 3/4-col on Desktop) */}
+                <div className="col-span-12 lg:col-span-4 xl:col-span-3 flex flex-col gap-6 lg:gap-8 min-h-0">
 
                     {/* Posture Health Gauge */}
                     <div className="shrink-0 flex flex-col gap-2">
@@ -79,8 +79,8 @@ export default function SSPMPage() {
 
                 </div>
 
-                {/* Right Area: Drift Analysis & Hardening (9 cols) */}
-                <div className="col-span-12 md:col-span-9 flex flex-col min-h-0 gap-8">
+                {/* Right Area: Drift Analysis & Hardening (Stacks on Tablet, 8/9-col on Desktop) */}
+                <div className="col-span-12 lg:col-span-8 xl:col-span-9 flex flex-col min-h-0 gap-6 lg:gap-8">
 
                     {/* Top: Configuration Drift Deck */}
                     <div className="shrink-0 flex flex-col min-h-0">
@@ -133,16 +133,16 @@ export default function SSPMPage() {
                     </div>
 
                     {/* Bottom Row: Hardening Baseline & Identity Map */}
-                    <div className="flex-1 grid grid-cols-12 gap-8 min-h-0">
+                    <div className="flex-1 grid grid-cols-12 gap-8 min-h-0 mb-8 lg:mb-0">
                         {/* Task Ledger */}
-                        <div className="col-span-7 flex flex-col min-h-0">
+                        <div className="col-span-12 xl:col-span-7 flex flex-col min-h-0">
                             <TechCard title="HARDENING_BASELINE // RECOMMENDED_OPS" className="flex-1 flex flex-col min-h-0">
                                 <div className="flex-1 overflow-y-auto custom-scrollbar">
                                     <table className="w-full text-left border-collapse">
                                         <thead className="sticky top-0 bg-zinc-950 z-10">
                                             <tr className="border-b border-zinc-900 text-[9px] font-black tracking-widest text-zinc-600 uppercase">
                                                 <th className="px-5 py-3">Hardening Requirement</th>
-                                                <th className="px-5 py-3">Point Value</th>
+                                                <th className="px-5 py-3 hidden sm:table-cell">Point Value</th>
                                                 <th className="px-5 py-3 text-right">Action</th>
                                             </tr>
                                         </thead>
@@ -155,7 +155,7 @@ export default function SSPMPage() {
                                                             <span className="text-[10px] font-bold text-zinc-300">{item.task}</span>
                                                         </div>
                                                     </td>
-                                                    <td className="px-5 py-4 font-mono text-[10px] font-bold text-emerald-500/70">{item.score}</td>
+                                                    <td className="px-5 py-4 font-mono text-[10px] font-bold text-emerald-500/70 hidden sm:table-cell">{item.score}</td>
                                                     <td className="px-5 py-4 text-right">
                                                         <button className={`text-[9px] font-black uppercase tracking-widest ${item.status === 'completed' ? 'text-zinc-700' : 'text-blue-500 hover:text-blue-400'}`}>
                                                             {item.status === 'completed' ? 'VERIFIED' : 'REMEDIATE'}
@@ -169,8 +169,8 @@ export default function SSPMPage() {
                             </TechCard>
                         </div>
 
-                        {/* Identity Exposure Heatmap (Simplified Grid) */}
-                        <div className="col-span-5 flex flex-col min-h-0">
+                        {/* Identity Exposure Heatmap (Stacks on Tablet) */}
+                        <div className="col-span-12 xl:col-span-5 flex flex-col min-h-0">
                             <TechCard title="IDENTITY_RISK_HEATMAP" className="flex-1 flex flex-col p-4 gap-4">
                                 <div className="flex-1 grid grid-cols-4 grid-rows-4 gap-2">
                                     {Array.from({ length: 16 }).map((_, i) => (

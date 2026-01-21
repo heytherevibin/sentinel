@@ -16,6 +16,7 @@ import {
     Columns, FunnelSimple, Plus, Minus, List, DownloadSimple
 } from '@phosphor-icons/react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useBreakpoint, type Breakpoint } from '@/hooks/useBreakpoint';
 
 // --- TYPES & MOCK DATA GENERATORS ---
 
@@ -52,6 +53,7 @@ interface ColumnConfig {
     width: number;
     minWidth: number;
     visible: boolean;
+    forced?: boolean; // User manually enabled this column despite viewport suggestions
 }
 
 const DEFAULT_COLUMNS: ColumnConfig[] = [
@@ -65,6 +67,18 @@ const DEFAULT_COLUMNS: ColumnConfig[] = [
     { id: 'risk', label: 'Risk', width: 90, minWidth: 70, visible: true },
     { id: 'actions', label: 'Actions', width: 80, minWidth: 60, visible: true },
 ];
+
+const COLUMN_BREAKPOINTS: Record<ColumnId, Breakpoint> = {
+    'tenant': '2xl',
+    'hash': 'xl',
+    'app': 'lg',
+    'owner': '2xl',
+    'exposure': 'lg',
+    'actions': 'sm',
+    'timestamp': 'xs',
+    'name': 'xs',
+    'risk': 'xs',
+};
 
 // --- ADVANCED QUERY PARSER TYPES ---
 type FilterOperator = '=' | '!=' | 'matches' | 'contains';
@@ -169,6 +183,8 @@ function DataProtectionHub() {
     // Stats
     const [eps, setEps] = useState(0);
     const [columns, setColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
+    const { isAtLeast } = useBreakpoint();
+
     const [resizingColId, setResizingColId] = useState<ColumnId | null>(null);
     const startXRef = useRef<number>(0);
     const startWidthRef = useRef<number>(0);
@@ -184,6 +200,7 @@ function DataProtectionHub() {
     const [pageSize, setPageSize] = useState(50);
     const [isAutoPageSize, setIsAutoPageSize] = useState(true);
     const gridRef = useRef<HTMLDivElement>(null);
+    const searchInputRef = useRef<HTMLInputElement>(null);
 
     const [selectedBucketIndex, setSelectedBucketIndex] = useState<number | null>(null);
     const [clientTime, setClientTime] = useState<number | null>(null);
@@ -640,7 +657,22 @@ function DataProtectionHub() {
     };
 
     const toggleColumn = (id: ColumnId) => {
-        setColumns(prev => prev.map(c => c.id === id ? { ...c, visible: !c.visible } : c));
+        setColumns(prev => prev.map(c => {
+            if (c.id === id) {
+                const newVisible = !c.visible;
+                const minReq = COLUMN_BREAKPOINTS[id] || 'xs';
+                const isViewportHidden = !isAtLeast(minReq);
+
+                // If user enables a column that is currently viewport-hidden, mark it as forced
+                // If user disables any column, clear the forced flag
+                return {
+                    ...c,
+                    visible: newVisible,
+                    forced: newVisible && isViewportHidden ? true : (newVisible ? c.forced : false)
+                };
+            }
+            return c;
+        }));
     };
 
     // --- SORT ENGINE ---
@@ -738,6 +770,16 @@ function DataProtectionHub() {
 
     const isFocusMode = !!selectedFile;
 
+    const actuallyVisibleColumns = useMemo(() => {
+        return columns.filter(col => {
+            if (!col.visible) return false;
+            if (isFocusMode && ['hash', 'app', 'owner', 'exposure', 'actions'].includes(col.id)) return false;
+            if (col.forced) return true; // User override takes precedence
+            const minReq = COLUMN_BREAKPOINTS[col.id] || 'xs';
+            return isAtLeast(minReq);
+        });
+    }, [columns, isAtLeast, isFocusMode]);
+
     // Context Menu Handler
     const handleContextMenu = (e: React.MouseEvent, field: string, value: string) => {
         e.preventDefault();
@@ -804,15 +846,21 @@ function DataProtectionHub() {
 
             {/* ADVANCED SEARCH BAR */}
             <div className="h-auto md:h-14 border-b border-zinc-800 flex items-center bg-[#0a0a0a] shrink-0 z-40 px-2 py-2 md:py-0">
-                <div className="w-full h-auto md:h-10 bg-black border border-zinc-800 rounded-[2px] flex flex-col md:flex-row items-stretch md:items-center px-1 relative group gap-2 md:gap-0 py-1 md:py-0">
-                    <div className="px-3 flex items-center justify-center border-r border-zinc-800/50 h-6">
+                <div
+                    onClick={() => searchInputRef.current?.focus()}
+                    className="w-full h-auto md:h-10 bg-black border border-zinc-800 rounded-[2px] flex flex-col md:flex-row items-stretch md:items-center px-1 relative group gap-2 md:gap-0 py-1 md:py-0 cursor-text"
+                >
+                    <div className="px-3 flex items-center justify-center border-r border-zinc-800/50 h-6 shrink-0">
                         <span className="text-emerald-500 font-bold text-xs select-none">{'>'}</span>
                     </div>
 
 
                     {/* Actual Input */}
                     <input
-                        className="bg-transparent border-none px-3 py-1.5 text-[11px] w-full focus:outline-none text-emerald-400 caret-emerald-500 font-mono tracking-wide placeholder:text-zinc-700 relative z-10"
+                        ref={searchInputRef}
+                        type="text"
+                        inputMode="text"
+                        className="bg-transparent border-none px-3 py-1.5 text-[16px] md:text-[11px] w-full focus:outline-none text-emerald-400 caret-emerald-500 font-mono tracking-wide placeholder:text-zinc-700 relative z-10"
                         placeholder="risk='CRITICAL' | where exposure='PUBLIC' | count by owner"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -966,16 +1014,30 @@ function DataProtectionHub() {
 
                                     {showColMenu && (
                                         <div className="absolute right-0 top-full mt-1 w-40 bg-zinc-900 border border-zinc-800 rounded shadow-xl py-1 z-50">
-                                            {columns.map(col => (
-                                                <button
-                                                    key={col.id}
-                                                    onClick={() => toggleColumn(col.id)}
-                                                    className="w-full text-left px-3 py-1.5 text-[10px] text-zinc-300 hover:bg-zinc-800 flex items-center justify-between"
-                                                >
-                                                    <span>{col.label}</span>
-                                                    {col.visible && <Check size={10} className="text-emerald-500" />}
-                                                </button>
-                                            ))}
+                                            {columns.map(col => {
+                                                const minReq = COLUMN_BREAKPOINTS[col.id] || 'xs';
+                                                const isViewportHidden = !isAtLeast(minReq);
+                                                const isForced = col.forced;
+                                                const isActuallyVisible = col.visible && (isForced || !isViewportHidden);
+
+                                                return (
+                                                    <button
+                                                        key={col.id}
+                                                        onClick={() => toggleColumn(col.id)}
+                                                        className={`w-full text-left px-3 py-1.5 text-[10px] flex items-center justify-between transition-colors ${isViewportHidden && !isForced ? 'text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800' : 'text-zinc-300 hover:bg-zinc-800'}`}
+                                                        title={isViewportHidden ? `Auto-hidden on this viewport. Click to enable back.` : ''}
+                                                    >
+                                                        <div className="flex flex-col">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span>{col.label}</span>
+                                                                {isForced && <span className="text-[7px] px-1 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-[1px]">PINNED</span>}
+                                                            </div>
+                                                            {isViewportHidden && !isForced && <span className="text-[7px] leading-tight opacity-60">AUTO-HIDDEN [VIEWPORT]</span>}
+                                                        </div>
+                                                        {col.visible && (isForced || !isViewportHidden) && <Check size={10} className="text-emerald-500" />}
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
                                     )}
                                 </div>
@@ -1035,22 +1097,11 @@ function DataProtectionHub() {
                                                     <th className="w-12 py-2 pl-4 text-zinc-600 font-mono text-[9px] text-right pr-4 border-r border-zinc-800/20 shadow-[inset_0_-1px_0_0_rgba(39,39,42,1)] bg-[#0f0f0f]">
                                                         #
                                                     </th>
-                                                    {columns.map(col => {
-                                                        if (!col.visible) return null;
-                                                        if (isFocusMode && (col.id === 'hash' || col.id === 'app' || col.id === 'owner' || col.id === 'exposure' || col.id === 'actions')) return null;
-
-                                                        const responsiveClasses = (({
-                                                            'tenant': 'hidden lg:table-cell',
-                                                            'app': 'hidden md:table-cell',
-                                                            'owner': 'hidden xl:table-cell',
-                                                            'exposure': 'hidden lg:table-cell',
-                                                            'actions': 'hidden sm:table-cell'
-                                                        } as Record<string, string>)[col.id] || '');
-
+                                                    {actuallyVisibleColumns.map(col => {
                                                         return (
                                                             <th
                                                                 key={col.id}
-                                                                className={`bg-[#0f0f0f] py-2 pl-4 group shadow-[inset_0_-1px_0_0_rgba(39,39,42,1)] ${responsiveClasses}`}
+                                                                className="bg-[#0f0f0f] py-2 pl-4 group shadow-[inset_0_-1px_0_0_rgba(39,39,42,1)]"
                                                                 style={{ width: col.width }}
                                                             >
                                                                 <div className="flex items-center gap-2 justify-between pr-4">
@@ -1085,8 +1136,8 @@ function DataProtectionHub() {
                                         <table className="text-left border-separate border-spacing-0 table-fixed w-full">
                                             <tbody className="divide-y divide-zinc-900">
                                                 {sortedLogs.length === 0 ? (
-                                                    <tr>
-                                                        <td colSpan={columns.filter(c => c.visible).length + 1} className="py-20 text-center text-zinc-600 text-[10px] font-mono uppercase tracking-widest">
+                                                    <tr className="border-b-0">
+                                                        <td colSpan={actuallyVisibleColumns.length + 1} className="py-20 text-center text-zinc-600 text-[10px] font-mono uppercase tracking-widest bg-black border-none">
                                                             No results found
                                                         </td>
                                                     </tr>
@@ -1096,7 +1147,7 @@ function DataProtectionHub() {
                                                             key={file.id}
                                                             file={file}
                                                             index={(currentPage - 1) * pageSize + idx}
-                                                            columns={columns}
+                                                            columns={actuallyVisibleColumns}
                                                             isSelected={selectedFile?.id === file.id}
                                                             isFocusMode={isFocusMode}
                                                             onSelect={() => setSelectedFile(selectedFile?.id === file.id ? null : file)}
@@ -1113,29 +1164,34 @@ function DataProtectionHub() {
                                     {sortedLogs.length > 0 && (
                                         <div className="h-12 border-t border-zinc-800 bg-[#080808] flex items-center justify-between px-4 shrink-0">
                                             <div className="flex items-center gap-3">
-                                                <span className="text-[9px] text-zinc-600 uppercase tracking-wider">Rows per page:</span>
-                                                <select
-                                                    value={isAutoPageSize ? 'auto' : pageSize}
-                                                    onChange={(e) => {
-                                                        const val = e.target.value;
-                                                        if (val === 'auto') {
-                                                            setIsAutoPageSize(true);
-                                                        } else {
-                                                            setIsAutoPageSize(false);
-                                                            setPageSize(Number(val));
-                                                        }
-                                                    }}
-                                                    className="bg-zinc-900 text-zinc-400 text-[9px] font-mono border border-zinc-700 px-2 py-1 outline-none hover:border-zinc-500 transition-colors focus:ring-1 focus:ring-emerald-500/50"
-                                                >
-                                                    <option value="auto">Auto</option>
-                                                    <option value={25}>25</option>
-                                                    <option value={50}>50</option>
-                                                    <option value={100}>100</option>
-                                                    <option value={250}>250</option>
-                                                    <option value={500}>500</option>
-                                                </select>
-                                                <div className="w-[1px] h-4 bg-zinc-800" />
-                                                <span className="text-[9px] text-zinc-500 font-mono">
+                                                <span className="text-[9px] text-zinc-600 uppercase tracking-wider">Rows/Page:</span>
+                                                <div className="flex items-center h-6 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 transition-colors focus-within:ring-1 focus-within:ring-emerald-500/50 relative group/rows">
+                                                    <select
+                                                        value={isAutoPageSize ? 'auto' : pageSize}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            if (val === 'auto') {
+                                                                setIsAutoPageSize(true);
+                                                            } else {
+                                                                setIsAutoPageSize(false);
+                                                                setPageSize(Number(val));
+                                                            }
+                                                        }}
+                                                        className="appearance-none bg-transparent text-zinc-400 text-[9px] font-mono pl-2 pr-6 h-full outline-none cursor-pointer z-10 leading-none"
+                                                    >
+                                                        <option value="auto">Auto</option>
+                                                        <option value={25}>25</option>
+                                                        <option value={50}>50</option>
+                                                        <option value={100}>100</option>
+                                                        <option value={250}>250</option>
+                                                        <option value={500}>500</option>
+                                                    </select>
+                                                    <div className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-600 group-hover/rows:text-zinc-400 transition-colors">
+                                                        <CaretDown size={10} weight="bold" />
+                                                    </div>
+                                                </div>
+                                                <div className="w-[1px] h-4 bg-zinc-800 mx-1" />
+                                                <span className="text-[9px] text-zinc-500 font-mono tabular-nums">
                                                     {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, sortedLogs.length)} of {sortedLogs.length}
                                                 </span>
                                             </div>
@@ -1372,21 +1428,10 @@ function FileRow({ file, index, columns, isSelected, isFocusMode, onSelect, onAd
                     {index + 1}
                 </td>
                 {columns.map(col => {
-                    if (!col.visible) return null;
-                    if (isFocusMode && (col.id === 'hash' || col.id === 'app' || col.id === 'owner' || col.id === 'exposure' || col.id === 'actions')) return null;
-
-                    const responsiveClasses = (({
-                        'tenant': 'hidden lg:table-cell',
-                        'app': 'hidden md:table-cell',
-                        'owner': 'hidden xl:table-cell',
-                        'exposure': 'hidden lg:table-cell',
-                        'actions': 'hidden sm:table-cell'
-                    } as Record<string, string>)[col.id] || '');
-
                     return (
                         <td
                             key={col.id}
-                            className={`py-2 pl-4 border-r border-transparent group-hover:border-zinc-800 transition-opacity duration-300 ${responsiveClasses}`}
+                            className="py-2 pl-4 border-r border-transparent group-hover:border-zinc-800 transition-opacity duration-300"
                             style={{ width: col.width }}
                         >
                             {renderCell(col.id)}
@@ -1396,7 +1441,7 @@ function FileRow({ file, index, columns, isSelected, isFocusMode, onSelect, onAd
             </tr>
             {isRawOpen && (
                 <tr className="bg-[#0f0f0f]">
-                    <td colSpan={columns.filter(c => c.visible).length + 1} className="p-0">
+                    <td colSpan={columns.length + 1} className="p-0">
                         <div className="border-y border-zinc-800 bg-[#0a0a0a] p-3 pl-12 animate-in slide-in-from-top-1 duration-200">
                             <pre className="font-mono text-[10px] text-zinc-400 leading-relaxed overflow-x-auto custom-scrollbar select-text pl-2 border-l border-emerald-500/20">{JSON.stringify({ ...file, timestamp: file.lastModified }, null, 2)}</pre>
                         </div>

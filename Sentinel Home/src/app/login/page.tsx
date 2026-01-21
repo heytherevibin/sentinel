@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Lock, ShieldAlert, BadgeCheck, ArrowRight } from 'lucide-react';
 
@@ -8,6 +8,7 @@ export default function LoginPage() {
     const router = useRouter();
     const [passkey, setPasskey] = useState('');
     const [status, setStatus] = useState<'IDLE' | 'LOADING' | 'ERROR' | 'SUCCESS'>('IDLE');
+    const inputRef = useRef<HTMLInputElement>(null);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -50,10 +51,12 @@ export default function LoginPage() {
 
                 {/* Login Form */}
                 <form onSubmit={handleLogin} className="w-full flex flex-col gap-4">
-                    <div className="relative group">
+                    <div className="relative group cursor-text" onClick={() => inputRef.current?.focus()}>
                         <div className={`absolute inset-0 bg-gradient-to-r ${status === 'ERROR' ? 'from-red-500/20 to-transparent' : 'from-emerald-500/20 to-transparent'} opacity-0 group-focus-within:opacity-100 transition-opacity rounded blur-md`} />
                         <input
+                            ref={inputRef}
                             type="password"
+                            inputMode="text"
                             value={passkey}
                             onChange={(e) => setPasskey(e.target.value)}
                             placeholder="ENTER ACCESS CODE"

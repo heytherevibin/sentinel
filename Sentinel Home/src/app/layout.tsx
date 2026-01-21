@@ -10,8 +10,7 @@ export const metadata: Metadata = {
 };
 
 import { SentinelProvider } from "@/components/SentinelProvider";
-import { Header } from "@/components/Header";
-import { TechFooter } from "@/components/TechFooter";
+import { LayoutWrapper } from "@/components/LayoutWrapper";
 
 export default function RootLayout({
   children,
@@ -22,13 +21,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${jetbrains.variable} font-mono bg-c2-bg text-c2-text antialiased selection:bg-emerald-500/40 selection:text-emerald-100 relative h-screen overflow-hidden`}>
         <SentinelProvider>
-          <div className="flex flex-col h-full relative z-10">
-            <Header />
-            <div className="flex-1 min-h-0 relative">
-              {children}
-            </div>
-            <TechFooter />
-          </div>
+          <LayoutWrapper>
+            {children}
+          </LayoutWrapper>
 
           {/* Global Mesh Grid Background */}
           <div className="fixed inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none z-0"></div>

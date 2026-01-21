@@ -55,10 +55,10 @@ function RemediationContent() {
         <main className="h-full bg-transparent text-zinc-300 flex flex-col font-mono overflow-hidden selection:bg-rose-950/30 relative">
 
             {/* Tactical Grid (12-col) */}
-            <div className="flex-1 p-6 grid grid-cols-12 gap-8 min-h-0 overflow-hidden relative z-10">
+            <div className="flex-1 p-3 md:p-4 lg:p-6 grid grid-cols-12 gap-4 lg:gap-8 min-h-0 overflow-y-auto lg:overflow-hidden relative z-10">
 
-                {/* Left Sidebar: Global Enforcement (3 cols) */}
-                <div className="col-span-12 md:col-span-3 flex flex-col gap-8 min-h-0">
+                {/* Left Sidebar: Global Enforcement (Stacks on Tablet, 3/4-col on Desktop) */}
+                <div className="col-span-12 lg:col-span-4 xl:col-span-3 flex flex-col gap-6 lg:gap-8 min-h-0">
 
                     {/* Global Kill-Switches */}
                     <TechCard title="GLOBAL_ENFORCEMENT // KILL_SWITCH" status={lockdownActive ? 'warning' : 'normal'} className="shrink-0 flex flex-col gap-4">
@@ -118,8 +118,8 @@ function RemediationContent() {
 
                 </div>
 
-                {/* Right Area: Remediation Deck & Ledger (9 cols) */}
-                <div className="col-span-12 md:col-span-9 flex flex-col min-h-0 gap-8">
+                {/* Right Area: Remediation Deck & Ledger (Stacks on Tablet, 8/9-col on Desktop) */}
+                <div className="col-span-12 lg:col-span-8 xl:col-span-9 flex flex-col min-h-0 gap-6 lg:gap-8">
 
                     {/* Top: Tactical Action Deck */}
                     <div className="shrink-0 flex flex-col min-h-0">
@@ -129,7 +129,7 @@ function RemediationContent() {
                                 Tactical Action Deck {targetAsset ? `// TARGET: ${targetAsset}` : ''}
                             </span>
                         </div>
-                        <div className="grid grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                             <ActionCard
                                 icon={<UserX className="text-rose-500" />}
                                 title="Quarantine Identity"
@@ -162,8 +162,8 @@ function RemediationContent() {
                                     <tr className="border-b border-zinc-900 text-[9px] font-black tracking-[0.2em] text-zinc-600 uppercase">
                                         <th className="px-5 py-3">Timestamp</th>
                                         <th className="px-5 py-3">Remediation Action</th>
-                                        <th className="px-5 py-3">Target Asset</th>
-                                        <th className="px-5 py-3">Exec Node</th>
+                                        <th className="px-5 py-3 hidden lg:table-cell">Target Asset</th>
+                                        <th className="px-5 py-3 hidden xl:table-cell">Exec Node</th>
                                         <th className="px-5 py-3 text-right">Status</th>
                                     </tr>
                                 </thead>
@@ -177,10 +177,10 @@ function RemediationContent() {
                                                     <span className="text-[10px] font-black tracking-widest text-zinc-300 uppercase">{res.type}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-5 py-4">
+                                            <td className="px-5 py-4 hidden lg:table-cell">
                                                 <span className="text-[10px] font-bold text-zinc-400">{res.metadata?.user || 'System'}</span>
                                             </td>
-                                            <td className="px-5 py-4">
+                                            <td className="px-5 py-4 hidden xl:table-cell">
                                                 <span className="text-[9px] font-black text-emerald-500/70 uppercase tracking-widest bg-emerald-500/5 px-2 py-1 rounded-sm border border-emerald-500/20">{res.hostname || 'Global'}</span>
                                             </td>
                                             <td className="px-5 py-4 text-right">

@@ -88,10 +88,10 @@ export default function Home() {
     <main className="h-full bg-transparent text-zinc-300 flex flex-col font-mono overflow-hidden selection:bg-emerald-900/30 relative">
 
       {/* Main Workspace */}
-      <div className="flex-1 p-3 md:p-6 grid grid-cols-12 gap-4 md:gap-8 min-h-0 overflow-y-auto md:overflow-hidden relative z-10">
+      <div className="flex-1 p-3 md:p-4 lg:p-6 grid grid-cols-12 gap-4 lg:gap-8 min-h-0 overflow-y-auto lg:overflow-hidden relative z-10">
 
-        {/* Left Sidebar (25% -> 3 cols) */}
-        <div className="col-span-12 md:col-span-3 flex flex-col gap-8 min-h-0">
+        {/* Left Sidebar - Stacks on Tablet, 3-col on Desktop */}
+        <div className="col-span-12 lg:col-span-4 xl:col-span-3 flex flex-col gap-6 lg:gap-8 min-h-0">
 
           {/* Risk Score */}
           <div className="shrink-0">
@@ -105,12 +105,12 @@ export default function Home() {
 
         </div>
 
-        {/* Right Main Area (75% -> 9 cols) */}
-        <div className="col-span-12 md:col-span-9 flex flex-col min-h-0 gap-8">
+        {/* Right Main Area - Stacks on Tablet, 9-col on Desktop */}
+        <div className="col-span-12 lg:col-span-8 xl:col-span-9 flex flex-col min-h-0 gap-6 lg:gap-8">
 
           {/* Top Row: Policy Summary & Traffic */}
-          <div className="grid grid-cols-12 gap-4 md:gap-8 shrink-0">
-            <div className="col-span-12 lg:col-span-5">
+          <div className="grid grid-cols-12 gap-4 lg:gap-8 shrink-0">
+            <div className="col-span-12 xl:col-span-5">
               <TechCard
                 title={summaryView === 'policies' ? "Policy Enforcement" : "Discovery Summary"}
                 className="h-full flex flex-col"
@@ -152,7 +152,7 @@ export default function Home() {
                 )}
               </TechCard>
             </div>
-            <div className="col-span-12 lg:col-span-7">
+            <div className="col-span-12 xl:col-span-7">
               <TechCard title="Traffic Analysis" className="flex flex-col h-64 md:h-72" toolbar={<div className="flex gap-2 text-[8px] uppercase tracking-wider"><span className="text-emerald-500">■ Egress</span><span className="text-zinc-600">■ Ingress</span></div>}>
                 <div className="flex-1 min-h-0">
                   {isLoading ? (
