@@ -10,69 +10,63 @@ export function NeuralAlignmentGauge({ score, status }: NeuralAlignmentGaugeProp
     const isActive = status === 'active';
 
     // Color logic
-    const getColor = (s: number) => {
-        if (!isActive && !isProcessing) return '#3f3f46'; // zinc-700
-        if (s >= 80) return '#10b981'; // Emerald-500
-        if (s >= 50) return '#f59e0b'; // Amber-500
-        return '#f43f5e'; // Rose-500
+    const getColorClass = (s: number) => {
+        if (!isActive && !isProcessing) return 'bg-zinc-800';
+        if (s >= 80) return 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]';
+        if (s >= 50) return 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.4)]';
+        return 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.4)]';
     };
 
-    const color = getColor(score);
-    const radius = 32;
-    const circumference = 2 * Math.PI * radius;
-    const offset = circumference - (score / 100) * circumference;
+    const segments = 20;
+    const activeSegments = Math.round((score / 100) * segments);
 
     return (
-        <div className="flex flex-col items-center justify-center p-4 bg-zinc-950/20 border border-zinc-800/50 rounded-lg relative overflow-hidden group">
-            {/* Background Radar Scan */}
-            <div className={`absolute inset-0 bg-gradient-to-b from-transparent ${isActive ? 'via-emerald-500/5' : 'via-zinc-500/5'} to-transparent h-[40%] w-full animate-[scan_4s_linear_infinite] opacity-30 pointer-events-none`} />
+        <div className="flex flex-col gap-5 p-5 bg-zinc-950/40 border-y border-zinc-900/50 relative overflow-hidden group select-none">
+            {/* Background Tech Detail */}
+            <div className="absolute inset-0 bg-[url('/grid.svg')] bg-[length:10px_10px] opacity-[0.03] pointer-events-none" />
 
-            <div className="relative w-32 h-32 flex items-center justify-center shrink-0">
-                <svg className={`w-full h-full -rotate-90 ${isProcessing ? 'animate-pulse' : ''}`} viewBox="0 0 80 80">
-                    {/* Background Track */}
-                    <circle cx="40" cy="40" r={radius} stroke="#18181b" strokeWidth="6" fill="none" />
-                    {/* Progress Track */}
-                    <circle
-                        cx="40" cy="40" r={radius}
-                        stroke={color}
-                        strokeWidth="6"
-                        fill="none"
-                        strokeDasharray={circumference}
-                        strokeDashoffset={isProcessing ? circumference * 0.7 : offset}
-                        strokeLinecap="round"
-                        className={`transition-all duration-1000 ease-out ${isProcessing ? 'animate-[spin_3s_linear_infinite]' : ''}`}
-                        style={{ transformOrigin: 'center' }}
-                    />
-                    {/* Inner Decoration */}
-                    <circle cx="40" cy="40" r={radius - 8} stroke={color} strokeWidth="1" strokeDasharray="2 4" fill="none" className="opacity-20" />
-                </svg>
-
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className={`text-3xl font-black tracking-tighter leading-none transition-colors duration-500 ${isActive ? (score >= 80 ? 'text-emerald-500' : score >= 50 ? 'text-amber-500' : 'text-rose-500') : 'text-zinc-700'}`}>
-                        {isProcessing ? '...' : isActive ? score : '00'}
+            <div className="flex items-end justify-between relative z-10">
+                <div className="flex flex-col">
+                    <span className="text-[10px] font-black text-zinc-300 tracking-[0.25em] uppercase leading-none">Alignment_Stability_Index</span>
+                    <span className="text-[7.5px] text-zinc-600 font-bold uppercase tracking-widest mt-2 flex items-center gap-2">
+                        <div className="w-1 h-1 rounded-full bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.8)]" />
+                        Neural_Bridge: <span className="text-emerald-500/80">Secured</span>
                     </span>
-                    <span className="text-[8px] font-bold text-zinc-600 uppercase tracking-[0.2em] mt-1">
-                        {isProcessing ? 'SYNCING' : 'ALIGNMENT'}
-                    </span>
+                </div>
+                <div className="text-4xl font-black text-zinc-100 tracking-tighter tabular-nums flex items-baseline gap-1 leading-none">
+                    {score}<span className="text-[12px] text-zinc-600 font-bold uppercase">%</span>
                 </div>
             </div>
 
-            {/* Tactical Load Markers */}
-            <div className="w-full mt-4 space-y-2">
-                <div className="flex justify-between items-center text-[9px] uppercase tracking-widest text-zinc-500">
-                    <span>Model Confidence</span>
-                    <span className={isActive ? 'text-emerald-500' : ''}>{isActive ? `${score}%` : '---'}</span>
+            {/* Linear Array */}
+            <div className="flex gap-1.5 h-3 relative z-10">
+                {Array.from({ length: segments }).map((_, i) => {
+                    const isActiveSegment = i < activeSegments;
+                    return (
+                        <div
+                            key={i}
+                            className={`flex-1 rounded-[1px] transition-all duration-700 ease-out ${isActiveSegment
+                                ? getColorClass(score)
+                                : 'bg-zinc-900/80 border border-zinc-800/20'
+                                } ${isProcessing ? 'animate-pulse' : ''}`}
+                            style={{
+                                transitionDelay: `${i * 20}ms`,
+                                transform: isActiveSegment ? 'scaleY(1)' : 'scaleY(0.7)'
+                            }}
+                        />
+                    );
+                })}
+            </div>
+
+            {/* Status Footer Detail */}
+            <div className="flex justify-between items-center relative z-10 px-0.5 mt-1 border-t pt-2 border-zinc-900/50">
+                <div className="flex gap-4">
+                    <div className="flex items-center gap-1.5 font-mono">
+                        <span className="text-[7px] font-black text-zinc-500 uppercase tracking-widest">Phase: <span className="text-zinc-300">Sync_Lock</span></span>
+                    </div>
                 </div>
-                <div className="w-full h-1 bg-zinc-900 rounded-full overflow-hidden">
-                    <div
-                        className="h-full bg-emerald-500 transition-all duration-1000"
-                        style={{ width: isActive ? `${score}%` : '0%' }}
-                    />
-                </div>
+                <span className="text-[7px] font-bold text-zinc-700 uppercase tracking-[0.3em]">Module_ID: ARC_24_NORTH</span>
             </div>
         </div>
     );
 }
-
-// Custom animation for scanning effect if not in globals.css
-// Note: Usually should be in globals.css, adding here as a reminder/failsafe

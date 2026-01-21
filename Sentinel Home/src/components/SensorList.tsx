@@ -12,6 +12,13 @@ export function SensorList() {
     const fetchSensors = async () => {
         try {
             const res = await fetch('/api/telemetry/heartbeat');
+            if (!res.ok) throw new Error(`HTTP_${res.status}`);
+
+            const contentType = res.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Invalid content type');
+            }
+
             const data = await res.json();
             if (Array.isArray(data)) {
                 const sorted = [...data].sort((a: SensorStatus, b: SensorStatus) =>
@@ -20,7 +27,7 @@ export function SensorList() {
                 setSensors(sorted);
             }
         } catch (e) {
-            console.error(e);
+            console.error('Sensor fetch error:', e);
         } finally {
             setIsLoading(false);
         }

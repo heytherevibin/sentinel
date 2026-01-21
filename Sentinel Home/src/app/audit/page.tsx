@@ -1,16 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileSearch, Clock, Database, Activity, Search, Filter, Calendar, Download, ShieldCheck, ChevronRight, Hash, HardDrive, Share2, Eye, Info } from 'lucide-react';
 import { TechCard } from '@/components/TechCard';
-
-// Dummy forensic data
-const forensicHits = [
-    { id: 'FRN-8821', time: '2026-01-20 10:45:02', event: 'SENSITIVE_FILE_READ', user: 'a.chen@sentinel.io', app: 'Google Drive', hash: '5f92a...e9b2', status: 'VERIFIED' },
-    { id: 'FRN-8822', time: '2026-01-20 10:42:15', event: 'OUTBOUND_CONNECTION', user: 'j.doe@sentinel.io', app: 'Unknown (Terminal)', hash: 'a1b2c...d4e5', status: 'VERIFIED' },
-    { id: 'FRN-8823', time: '2026-01-20 10:38:40', event: 'OIDC_TOKEN_REFRESH', user: 'system_svc', app: 'Okta', hash: '99e8d...f1a2', status: 'VERIFIED' },
-    { id: 'FRN-8824', time: '2026-01-20 10:30:12', event: 'DLP_POLICY_TRIGGER', user: 'm.keller@sentinel.io', app: 'Slack', hash: 'e2c3d...4a5b', status: 'VERIFIED' },
-];
+import { useSentinelApi } from '@/hooks/useSentinelApi';
 
 const retentionStats = [
     { label: 'Hot Storage (90d)', value: '14.2 TB', health: 98 },
@@ -20,6 +13,21 @@ const retentionStats = [
 
 export default function ForensicsPage() {
     const [searchQuery, setSearchQuery] = useState('');
+    const [auditLogs, setAuditLogs] = useState<any[]>([]);
+    const { callApi, loading } = useSentinelApi();
+
+    const fetchLogs = async () => {
+        try {
+            const data = await callApi('/api/audit');
+            if (Array.isArray(data)) setAuditLogs(data);
+        } catch (e) { console.error('Failed to fetch audit logs', e); }
+    };
+
+    useEffect(() => {
+        fetchLogs();
+        const interval = setInterval(fetchLogs, 10000);
+        return () => clearInterval(interval);
+    }, [callApi]);
 
     return (
         <main className="h-full bg-transparent text-zinc-300 flex flex-col font-mono overflow-hidden selection:bg-purple-950/30 relative">
@@ -111,32 +119,37 @@ export default function ForensicsPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {forensicHits.map((hit) => (
+                                    {auditLogs.map((hit) => (
                                         <tr key={hit.id} className="border-b border-zinc-900 group hover:bg-purple-500/[0.02] cursor-default transition-colors">
                                             <td className="px-5 py-4">
-                                                <span className="text-[10px] font-black text-purple-500/70 tracking-tighter">{hit.id}</span>
+                                                <span className="text-[10px] font-black text-purple-500/70 tracking-tighter">{hit.id.slice(0, 8)}</span>
                                             </td>
-                                            <td className="px-5 py-4 text-[10px] font-bold text-zinc-600 italic">{hit.time}</td>
+                                            <td className="px-5 py-4 text-[10px] font-bold text-zinc-600 italic">{new Date(hit.timestamp).toLocaleString()}</td>
                                             <td className="px-5 py-4">
                                                 <div className="flex flex-col gap-0.5">
-                                                    <span className="text-[10px] font-black tracking-widest text-zinc-300 uppercase">{hit.event}</span>
-                                                    <span className="text-[8px] text-zinc-600 font-bold uppercase tracking-widest">{hit.app}</span>
+                                                    <span className="text-[10px] font-black tracking-widest text-zinc-300 uppercase">{hit.action}</span>
+                                                    <span className="text-[8px] text-zinc-600 font-bold uppercase tracking-widest">{hit.targetResource}</span>
                                                 </div>
                                             </td>
                                             <td className="px-5 py-4">
-                                                <span className="text-[10px] font-bold text-zinc-400">{hit.user}</span>
+                                                <span className="text-[10px] font-bold text-zinc-400">{hit.actorName}</span>
                                             </td>
                                             <td className="px-5 py-4 text-right">
                                                 <div className="flex flex-col items-end gap-1">
                                                     <div className="flex items-center gap-1.5">
                                                         <ShieldCheck size={10} className="text-emerald-500" />
-                                                        <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">{hit.status}</span>
+                                                        <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">{hit.severity}</span>
                                                     </div>
                                                     <span className="text-[7px] font-mono text-zinc-700 tracking-tighter uppercase font-black">{hit.hash}</span>
                                                 </div>
                                             </td>
                                         </tr>
                                     ))}
+                                    {auditLogs.length === 0 && (
+                                        <tr>
+                                            <td colSpan={5} className="py-20 text-center text-[10px] font-black text-zinc-800 uppercase tracking-widest">No Forensic Records Found</td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>

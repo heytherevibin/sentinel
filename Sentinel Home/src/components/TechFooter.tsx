@@ -13,7 +13,7 @@ export function TechFooter() {
     }, []);
 
     return (
-        <footer className="shrink-0 border-t border-c2-border bg-c2-paper py-1 px-4 text-[10px] text-c2-muted font-mono flex justify-between items-center select-none cursor-default">
+        <footer className="shrink-0 border-t border-c2-border bg-c2-paper py-2 px-6 text-[10px] text-c2-muted font-mono flex justify-between items-center select-none cursor-default z-50">
             {/* Left: Status Ticker */}
             <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 text-c2-primary">

@@ -28,9 +28,25 @@ export function useSentinelApi() {
 
                 clearTimeout(timeoutId);
 
-                if (!response.ok) throw new Error(`HTTP_${response.status}`);
+                if (!response.ok) {
+                    const text = await response.text().catch(() => 'UNKNOWN_ERROR');
+                    throw new Error(`HTTP_${response.status}: ${text.slice(0, 100)}`);
+                }
 
-                const data = await response.json();
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text().catch(() => 'UNREADABLE_BODY');
+                    throw new Error(`INVALID_CONTENT_TYPE: ${contentType} - ${text.slice(0, 50)}`);
+                }
+
+                let data;
+                try {
+                    data = await response.json();
+                } catch (parseError) {
+                    const text = await response.text().catch(() => 'UNREADABLE_BODY');
+                    throw new Error(`JSON_PARSE_ERROR: ${text.slice(0, 100)}`);
+                }
+
                 setLoading(false);
                 return data;
             } catch (err: any) {

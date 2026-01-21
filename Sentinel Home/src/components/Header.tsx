@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { Activity } from 'lucide-react';
+import { List } from '@phosphor-icons/react';
 import { Navigation } from '@/components/Navigation';
 import { useSentinel } from './SentinelProvider';
 
@@ -46,32 +47,46 @@ const ConnectivityIndicator = () => {
 
 export const Header = React.memo(function Header() {
     const { stats } = useSentinel();
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
     return (
-        <header className="flex justify-between items-center px-6 py-4 border-b border-zinc-800 bg-black z-20 shrink-0">
-            <div className="flex items-center gap-6">
+        <header className="flex justify-between items-center px-4 md:px-6 py-3 md:py-4 border-b border-zinc-800 bg-black z-50 shrink-0 relative">
+            <div className="flex items-center gap-3 md:gap-6">
+                {/* Mobile Menu Toggle */}
+                <button
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className="md:hidden p-3 -ml-2 text-zinc-500 hover:text-white active:bg-zinc-900 rounded-full transition-all"
+                >
+                    <List size={20} weight="bold" />
+                </button>
+
                 <div className="flex items-center gap-2 text-emerald-500">
                     <div className="w-8 h-8 bg-emerald-500/10 border border-emerald-500/50 flex items-center justify-center rounded-sm">
                         <Activity size={18} />
                     </div>
                 </div>
                 <div>
-                    <h1 className="text-xl font-black tracking-tighter text-white leading-none flex flex-col">
+                    <h1 className="text-lg md:text-xl font-black tracking-tighter text-white leading-none flex flex-col">
                         <span className="leading-none">SENTINEL</span>
                         <div className="flex items-center gap-1 mt-0.5">
-                            <span className="text-[9px] tracking-[0.2em] text-zinc-500 font-bold uppercase">COMMAND</span>
+                            <span className="text-[8px] md:text-[9px] tracking-[0.2em] text-zinc-500 font-bold uppercase">COMMAND</span>
                             <div className="w-2 h-[6px] bg-emerald-500 mt-0.5" />
-                            <span className="text-[9px] tracking-[0.2em] text-zinc-500 font-bold uppercase">CORE</span>
+                            <span className="text-[8px] md:text-[9px] tracking-[0.2em] text-zinc-500 font-bold uppercase">CORE</span>
                         </div>
                     </h1>
                 </div>
-                <ConnectivityIndicator />
+                <div className="hidden md:block">
+                    <ConnectivityIndicator />
+                </div>
             </div>
 
-            {/* Tactical Navigation */}
-            <Navigation />
+            {/* Tactical Navigation - Hidden on mobile, shown in menu */}
+            <div className="hidden md:block">
+                <Navigation />
+            </div>
 
-            <div className="flex gap-12 text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
-                <div className="flex flex-col items-end">
+            <div className="flex gap-4 lg:gap-12 text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
+                <div className="hidden lg:flex flex-col items-end">
                     <span className="text-[9px] mb-1">Threat_Con</span>
                     <div className="flex gap-1">
                         {[1, 2, 3, 4, 5].map(i => (
@@ -79,7 +94,7 @@ export const Header = React.memo(function Header() {
                         ))}
                     </div>
                 </div>
-                <div className="flex flex-col items-end">
+                <div className="hidden md:flex flex-col items-end">
                     <span className="text-[9px] mb-1">Protocol</span>
                     <span className="text-emerald-500">AES-256-GCM</span>
                 </div>
@@ -88,6 +103,19 @@ export const Header = React.memo(function Header() {
                     <span className="text-white">ANALYST_01</span>
                 </div>
             </div>
+
+            {/* Mobile Menu Overlay */}
+            {isMenuOpen && (
+                <div className="absolute top-full left-0 right-0 bg-black/95 border-b border-zinc-800 p-4 md:hidden z-50 animate-in slide-in-from-top-2 duration-200">
+                    <div className="flex flex-col gap-4">
+                        <div className="flex items-center justify-between border-b border-zinc-800 pb-3 mb-1">
+                            <ConnectivityIndicator />
+                            <span className="text-[8px] text-zinc-600 font-bold tracking-[0.2em] select-none">NODE_SYNC_ACTIVE</span>
+                        </div>
+                        <Navigation mobile onAction={() => setIsMenuOpen(false)} />
+                    </div>
+                </div>
+            )}
         </header>
     );
 });

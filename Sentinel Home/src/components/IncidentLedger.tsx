@@ -3,6 +3,8 @@
 import React from 'react';
 import { TelemetryEvent } from '@/types';
 import { Skeleton } from './Skeleton';
+import { useRouter } from 'next/navigation';
+import { ExternalLink } from 'lucide-react';
 
 interface IncidentLedgerProps {
     alerts: TelemetryEvent[];
@@ -10,6 +12,7 @@ interface IncidentLedgerProps {
 }
 
 export function IncidentLedger({ alerts, isLoading = false }: IncidentLedgerProps) {
+    const router = useRouter();
     const [filter, setFilter] = React.useState('');
     const [activeTab, setActiveTab] = React.useState<'ALL' | 'DLP' | 'ANOMALIES'>('ALL');
 
@@ -129,8 +132,12 @@ export function IncidentLedger({ alerts, isLoading = false }: IncidentLedgerProp
                             }
 
                             return (
-                                <div key={idx} className="grid grid-cols-12 gap-4 px-3 py-2.5 items-center hover:bg-zinc-900/20 transition-colors group text-[10px]">
-                                    <div className="col-span-2">
+                                <div
+                                    key={idx}
+                                    onClick={() => router.push(`/introspection?targetAsset=${alert.hostname || ''}`)}
+                                    className="grid grid-cols-12 gap-4 px-3 py-2.5 items-center hover:bg-zinc-800/40 cursor-pointer transition-all group text-[10px]"
+                                >
+                                    <div className="col-span-2 flex items-center gap-2">
                                         <span className={`px-1.5 py-0.5 rounded-[1px] font-bold tracking-wider border ${getSeverityStyle(alert.type)}`}>
                                             {severity}
                                         </span>
@@ -141,8 +148,9 @@ export function IncidentLedger({ alerts, isLoading = false }: IncidentLedgerProp
                                     <div className="col-span-2 text-zinc-300 font-bold truncate">
                                         {alert.hostname}
                                     </div>
-                                    <div className="col-span-4 text-zinc-400 truncate opacity-80 group-hover:opacity-100 transition-opacity font-mono" title={details}>
+                                    <div className="col-span-4 text-zinc-400 truncate opacity-80 group-hover:opacity-100 transition-opacity font-mono flex items-center gap-2" title={details}>
                                         {details}
+                                        <ExternalLink size={8} className="opacity-0 group-hover:opacity-50 transition-opacity" />
                                     </div>
                                     <div className="col-span-2 text-right">
                                         <div className="flex items-center justify-end gap-2">
@@ -164,3 +172,4 @@ export function IncidentLedger({ alerts, isLoading = false }: IncidentLedgerProp
         </div>
     );
 }
+

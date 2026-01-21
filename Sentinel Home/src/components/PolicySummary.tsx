@@ -14,6 +14,13 @@ export function PolicySummary() {
         const fetchPolicies = async () => {
             try {
                 const res = await fetch('/api/policy');
+                if (!res.ok) throw new Error(`HTTP_${res.status}`);
+
+                const contentType = res.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Invalid content type');
+                }
+
                 const data = await res.json();
                 if (Array.isArray(data)) {
                     setPolicies(data);

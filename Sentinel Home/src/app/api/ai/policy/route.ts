@@ -50,18 +50,26 @@ CRITICAL: Be extremely precise. If user specifies a vendor (e.g. 'Visa'), DO NOT
 
                 const data = await res.json();
                 const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-                // Robust JSON Extraction
-                // Handles Markdown wrapping, whitespace, and stray characters
                 let result;
                 try {
-                    const jsonStart = rawText.indexOf('{');
-                    const jsonEnd = rawText.lastIndexOf('}');
+                    // Extract JSON from potential markdown blocks or stray text
+                    let cleanedText = rawText.trim();
+                    if (cleanedText.includes('```')) {
+                        const matches = cleanedText.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+                        if (matches && matches[1]) {
+                            cleanedText = matches[1];
+                        }
+                    }
+
+                    const jsonStart = cleanedText.indexOf('{');
+                    const jsonEnd = cleanedText.lastIndexOf('}');
+
                     if (jsonStart !== -1 && jsonEnd !== -1) {
-                        const jsonStr = rawText.substring(jsonStart, jsonEnd + 1);
+                        const jsonStr = cleanedText.substring(jsonStart, jsonEnd + 1);
                         result = JSON.parse(jsonStr);
                     } else {
-                        throw new Error('No JSON payload found in response');
+                        // Attempt to parse the whole string if no braces found
+                        result = JSON.parse(cleanedText);
                     }
                 } catch (parseError) {
                     console.error('JSON Parse Failure', rawText);

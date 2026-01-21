@@ -44,19 +44,25 @@ export default function Home() {
       try {
         // Stats & Chart
         const statsRes = await fetch('/api/stats');
-        const statsData = await statsRes.json();
-        if (statsData.stats) setStats(statsData.stats);
-        if (statsData.chart) setChartData(statsData.chart);
+        if (statsRes.ok) {
+          const statsData = await statsRes.json();
+          if (statsData.stats) setStats(statsData.stats);
+          if (statsData.chart) setChartData(statsData.chart);
+          if (statsData.discovery) setDiscovery(statsData.discovery);
+        }
 
         // Alerts
         const alertsRes = await fetch('/api/telemetry/alert');
-        const alertsData = await alertsRes.json();
-        if (Array.isArray(alertsData)) setAlerts(alertsData);
-
-        if (statsData.discovery) setDiscovery(statsData.discovery);
+        if (alertsRes.ok) {
+          const contentType = alertsRes.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const alertsData = await alertsRes.json();
+            if (Array.isArray(alertsData)) setAlerts(alertsData);
+          }
+        }
 
       } catch (e) {
-        console.error(e);
+        console.error('Home data fetch failure', e);
       } finally {
         setIsLoading(false);
       }
@@ -82,7 +88,7 @@ export default function Home() {
     <main className="h-full bg-transparent text-zinc-300 flex flex-col font-mono overflow-hidden selection:bg-emerald-900/30 relative">
 
       {/* Main Workspace */}
-      <div className="flex-1 p-6 grid grid-cols-12 gap-8 min-h-0 overflow-hidden relative z-10">
+      <div className="flex-1 p-3 md:p-6 grid grid-cols-12 gap-4 md:gap-8 min-h-0 overflow-y-auto md:overflow-hidden relative z-10">
 
         {/* Left Sidebar (25% -> 3 cols) */}
         <div className="col-span-12 md:col-span-3 flex flex-col gap-8 min-h-0">
@@ -103,8 +109,8 @@ export default function Home() {
         <div className="col-span-12 md:col-span-9 flex flex-col min-h-0 gap-8">
 
           {/* Top Row: Policy Summary & Traffic */}
-          <div className="grid grid-cols-12 gap-8 shrink-0">
-            <div className="col-span-5">
+          <div className="grid grid-cols-12 gap-4 md:gap-8 shrink-0">
+            <div className="col-span-12 lg:col-span-5">
               <TechCard
                 title={summaryView === 'policies' ? "Policy Enforcement" : "Discovery Summary"}
                 className="h-full flex flex-col"
@@ -146,8 +152,8 @@ export default function Home() {
                 )}
               </TechCard>
             </div>
-            <div className="col-span-7">
-              <TechCard title="Traffic Analysis" className="flex flex-col h-72" toolbar={<div className="flex gap-2 text-[8px] uppercase tracking-wider"><span className="text-emerald-500">■ Egress</span><span className="text-zinc-600">■ Ingress</span></div>}>
+            <div className="col-span-12 lg:col-span-7">
+              <TechCard title="Traffic Analysis" className="flex flex-col h-64 md:h-72" toolbar={<div className="flex gap-2 text-[8px] uppercase tracking-wider"><span className="text-emerald-500">■ Egress</span><span className="text-zinc-600">■ Ingress</span></div>}>
                 <div className="flex-1 min-h-0">
                   {isLoading ? (
                     <div className="h-full w-full flex flex-col gap-4 p-4">
@@ -207,7 +213,7 @@ export default function Home() {
           </div>
 
           {/* Bottom Row: Incident Ledger */}
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 min-h-[400px] md:min-h-0">
             <TechCard
               title={view === 'incidents' ? "Strategic Incident Intelligence" : "Managed Asset Inventory"}
               status="normal"

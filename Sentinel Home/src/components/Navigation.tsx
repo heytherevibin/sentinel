@@ -12,11 +12,11 @@ const navItems = [
     { href: '/settings', label: 'CONFIG' },
 ];
 
-export function Navigation() {
+export function Navigation({ mobile, onAction }: { mobile?: boolean, onAction?: () => void }) {
     const pathname = usePathname();
 
     return (
-        <div className="flex items-center gap-3">
+        <div className={`flex ${mobile ? 'flex-col' : 'items-center'} gap-3`}>
             {navItems.map((item) => {
                 const isActive = pathname === item.href;
 
@@ -24,12 +24,14 @@ export function Navigation() {
                     <Link
                         key={item.href}
                         href={item.href}
+                        onClick={onAction}
                         className={`
-                            group relative h-9 px-4 flex items-center border transition-all
+                            group relative h-10 md:h-9 px-4 flex items-center border transition-all
                             ${isActive ? 'justify-start gap-2' : 'justify-center'}
+                            ${mobile ? 'w-full' : ''}
                             ${isActive
                                 ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-500'
-                                : 'bg-zinc-900/30 border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-400 hover:bg-zinc-900/50'
+                                : 'bg-zinc-900/30 border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-400 hover:bg-zinc-900/50 active:bg-zinc-800 active:scale-[0.98]'
                             }
                         `}
                     >

@@ -21,28 +21,28 @@ model Alert {
 model Sensor {
   id        String   @id
   hostname  String   @unique
-  ipAddress String?  // Real IP Address
   lastSeen  DateTime
   status    String
   version   String
+  ipAddress String?
 }
 
 model Policy {
-  id          String @id
-  category    String
+  id          String   @id
   name        String
+  category    String
   pattern     String
   action      String
   description String
-  updatedAt   DateTime @default(now()) // Added for version tracking
+  updatedAt   DateTime @default(now())
 }
 
 model SystemLog {
-  id        Int      @id @default(autoincrement())
-  timestamp DateTime @default(now())
   type      String
   component String
   message   String
+  timestamp DateTime @default(now())
+  id        Int      @id @default(autoincrement())
 }
 
 model SystemConfig {
@@ -51,11 +51,11 @@ model SystemConfig {
 }
 
 model Command {
-  id        String   @id @default(uuid())
-  sensorId  String
-  type      String
-  payload   String?
-  queuedAt  DateTime @default(now())
+  id       String   @id @default(uuid())
+  sensorId String
+  type     String
+  payload  String?
+  queuedAt DateTime @default(now())
 }
 
 model AuditLog {
@@ -66,27 +66,39 @@ model AuditLog {
   action         String
   targetResource String
   details        Json?
-  severity       String   @default("INFO") // INFO, WARN, CRITICAL
-  hash           String?  // Simulation of cryptographic hash for UI
+  severity       String   @default("INFO")
+  hash           String?
 }
 
 model Application {
-  id        String   @id @default(uuid())
-  name      String
-  vendor    String
-  instance  String
-  type      String   // Sanctioned, Unsanctioned
-  users     Int      @default(0)
-  cci       Int      @default(0)
-  certs     String[]
-  lastScan  DateTime @default(now())
-  risk      String?
+  id       String   @id @default(uuid())
+  name     String
+  vendor   String
+  instance String
+  type     String
+  users    Int      @default(0)
+  cci      Int      @default(0)
+  certs    String[]
+  lastScan DateTime @default(now())
+  risk     String?
 }
 
 model ApplicationMetric {
-  id        Int      @id @default(autoincrement())
-  timestamp DateTime @default(now())
-  sanctionedCount Int
+  id                Int      @id @default(autoincrement())
+  timestamp         DateTime @default(now())
+  sanctionedCount   Int
   unsanctionedCount Int
-  avgCCI    Int
+  avgCCI            Int
+}
+
+model GatewayConnector {
+  id        String   @id
+  name      String
+  status    String
+  type      String
+  icon      String
+  color     String
+  ipAddress String?
+  region    String?
+  updatedAt DateTime @updatedAt
 }

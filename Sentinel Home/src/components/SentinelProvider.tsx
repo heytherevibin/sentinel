@@ -31,6 +31,13 @@ export function SentinelProvider({ children }: { children: ReactNode }) {
         const fetchData = async () => {
             try {
                 const res = await fetch('/api/stats');
+                if (!res.ok) throw new Error(`HTTP_${res.status}`);
+
+                const contentType = res.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Invalid content type');
+                }
+
                 const data = await res.json();
                 if (data.stats) setStats(data.stats);
             } catch (e) {

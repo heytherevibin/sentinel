@@ -10,9 +10,10 @@ interface TechCardProps {
     contentClassName?: string;
     status?: 'normal' | 'warning' | 'critical' | 'offline' | 'active';
     toolbar?: React.ReactNode;
+    icon?: React.ReactNode;
 }
 
-export const TechCard = React.memo(function TechCard({ title, children, className, contentClassName, status = 'normal', toolbar }: TechCardProps) {
+export const TechCard = React.memo(function TechCard({ title, children, className, contentClassName, status = 'normal', toolbar, icon }: TechCardProps) {
     const statusColor = {
         'normal': 'bg-emerald-500',
         'warning': 'bg-amber-500',
@@ -27,15 +28,12 @@ export const TechCard = React.memo(function TechCard({ title, children, classNam
             {title && (
                 <div className="flex items-center justify-between px-4 py-2 bg-zinc-900/30 border-b border-zinc-700 select-none">
                     <div className="flex items-center gap-3">
-                        {/* Status Indicator - Rectangular, Functional */}
-                        <div className="flex gap-0.5">
-                            <div className={clsx("w-1 h-3 rounded-sm shadow-[0_0_8px_-1px_currentColor]", statusColor,
-                                status !== 'offline' && "text-opacity-80")} />
-                            {status === 'normal' && <div className="w-1 h-3 bg-emerald-500/20 rounded-sm" />}
-                            {status === 'active' && <div className="w-1 h-3 bg-cyan-500/20 rounded-sm animate-pulse" />}
-                        </div>
+                        {/* Status Indicator - Precision Pill */}
+                        <div className={clsx("w-1.5 h-4 rounded-[1px] shadow-[0_0_8px_-1px_currentColor]", statusColor,
+                            status !== 'offline' && "text-opacity-80")} />
 
-                        <h3 className="text-[11px] font-bold tracking-[0.2em] text-zinc-300 uppercase font-mono">
+                        <h3 className="text-[11px] font-black tracking-[0.2em] text-zinc-300 uppercase font-mono flex items-center gap-2">
+                            {icon && <span className="text-zinc-500">{icon}</span>}
                             {title}
                         </h3>
                     </div>

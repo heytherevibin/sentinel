@@ -51,11 +51,29 @@ export default function NeuralLabPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt: activePrompt })
             });
+
+            if (!res.ok) {
+                const errorText = await res.text().catch(() => 'Unknown Error');
+                throw new Error(`HTTP_${res.status}: ${errorText}`);
+            }
+
+            const contentType = res.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Invalid specialized neural response format');
+            }
+
             const data = await res.json();
             setAnalysis(data);
             setStatus('active');
-        } catch (error) {
+        } catch (error: any) {
             console.error('Analysis Failed', error);
+            setAnalysis({
+                source: 'ERROR_NODE',
+                name: 'SYNTHESIS_FAILED',
+                explanation: error.message || 'The neural mesh failed to synchronize.',
+                safetyScore: 0,
+                testCases: { match: [], noMatch: [] }
+            });
             setStatus('idle');
         }
     };

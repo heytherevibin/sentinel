@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShieldCheck, ShieldAlert, Globe, Database, Activity, Lock, Users, Eye, AlertTriangle, CheckCircle, ChevronRight, Filter, Search, MoreVertical, ExternalLink } from 'lucide-react';
 import { TechCard } from '@/components/TechCard';
 import { NeuralAlignmentGauge } from '@/components/NeuralAlignmentGauge';
+import { useSentinelApi } from '@/hooks/useSentinelApi';
 
 // Dummy data for posture drift
 const configurationDrifts = [
@@ -23,7 +24,22 @@ const hardeningBaseline = [
 ];
 
 export default function SSPMPage() {
+    const [apps, setApps] = useState<any[]>([]);
     const [selectedDrift, setSelectedDrift] = useState<any>(null);
+    const { callApi, loading } = useSentinelApi();
+
+    const fetchApps = async () => {
+        try {
+            const data = await callApi('/api/apps');
+            if (Array.isArray(data)) setApps(data);
+        } catch (e) { console.error('Failed to fetch apps', e); }
+    };
+
+    useEffect(() => {
+        fetchApps();
+        const interval = setInterval(fetchApps, 15000);
+        return () => clearInterval(interval);
+    }, [callApi]);
 
     return (
         <main className="h-full bg-transparent text-zinc-300 flex flex-col font-mono overflow-hidden selection:bg-blue-950/30 relative">
@@ -43,15 +59,20 @@ export default function SSPMPage() {
                         <NeuralAlignmentGauge score={84} status="active" />
                     </div>
 
-                    {/* App Health Ledger */}
                     <TechCard title="APP_GOVERNANCE // HEALTH" className="flex-1 flex flex-col min-h-0 overflow-hidden">
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-1">
                             <div className="space-y-4 pt-2">
-                                <AppHealthRow name="Slack Enterprise" score={92} status="healthy" />
-                                <AppHealthRow name="GitHub Organization" score={78} status="warning" />
-                                <AppHealthRow name="Salesforce Cloud" score={64} status="critical" />
-                                <AppHealthRow name="AWS Regions" score={88} status="healthy" />
-                                <AppHealthRow name="Google Identity" score={95} status="healthy" />
+                                {apps.map((app) => (
+                                    <AppHealthRow
+                                        key={app.id}
+                                        name={app.name}
+                                        score={app.cci || 0}
+                                        status={app.cci > 90 ? 'healthy' : app.cci > 70 ? 'warning' : 'critical'}
+                                    />
+                                ))}
+                                {apps.length === 0 && !loading && (
+                                    <div className="text-[10px] text-zinc-600 text-center py-4 uppercase tracking-widest">No Apps In Inventory</div>
+                                )}
                             </div>
                         </div>
                     </TechCard>

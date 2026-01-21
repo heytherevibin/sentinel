@@ -345,6 +345,34 @@ export const db = {
         }
     },
 
+    // Audit Log Methods
+    getAuditLogs: async (): Promise<any[]> => {
+        try {
+            return await prisma.auditLog.findMany({
+                orderBy: { timestamp: 'desc' },
+                take: 1000
+            });
+        } catch (e) { return []; }
+    },
+
+    addAuditLog: async (actorId: string, actorName: string, action: string, targetResource: string, details?: any, severity: string = 'INFO') => {
+        try {
+            await prisma.auditLog.create({
+                data: {
+                    actorId,
+                    actorName,
+                    action,
+                    targetResource,
+                    details: details || {},
+                    severity,
+                    hash: Math.random().toString(36).substring(2, 15) // Mock hash for UI aesthetics
+                }
+            });
+        } catch (e) {
+            console.error('[DB_AUDIT_LOG_FAIL]', e);
+        }
+    },
+
     // Application Inventory Methods
     getApplications: async () => {
         try {
@@ -369,5 +397,52 @@ export const db = {
                 await (prisma as any).application.createMany({ data: apps });
             }
         } catch (e) { console.error("App Seeding Failed", e); }
+    },
+
+    // Gateway Connector Methods
+    getGateways: async () => {
+        try {
+            const count = await (prisma as any).gatewayConnector.count();
+            if (count === 0) {
+                await db.seedInitialGateways();
+            }
+            return await (prisma as any).gatewayConnector.findMany({
+                orderBy: { id: 'asc' }
+            });
+        } catch (e: any) {
+            return [];
+        }
+    },
+
+    updateGateway: async (id: string, data: any) => {
+        try {
+            await (prisma as any).gatewayConnector.update({
+                where: { id },
+                data
+            });
+            await db.addSystemLog('INFO', 'GATEWAY', `Gateway ${id} state updated.`);
+        } catch (e) { console.error('Gateway Update Failed', e); }
+    },
+
+    seedInitialGateways: async () => {
+        const connectors = [
+            { id: 'CONN-01', name: 'Okta Enterprise', status: 'connected', type: 'OIDC/IDP', icon: 'Fingerprint', color: 'text-zinc-400', ipAddress: '104.28.16.22', region: 'US-EAST-1' },
+            { id: 'CONN-02', name: 'Slack Grid', status: 'connected', type: 'SaaS/CASB', icon: 'SlackLogo', color: 'text-zinc-400', ipAddress: '172.64.12.5', region: 'US-WEST-2' },
+            { id: 'CONN-03', name: 'Google Workspace', status: 'warning', type: 'DLP/Mail', icon: 'GoogleLogo', color: 'text-zinc-400', ipAddress: '142.250.190.46', region: 'EU-CENTRAL-1' },
+            { id: 'CONN-04', name: 'AWS Production', status: 'connected', type: 'Cloud/SSPM', icon: 'AmazonLogo', color: 'text-zinc-400', ipAddress: '52.94.233.129', region: 'US-EAST-1' },
+            { id: 'CONN-05', name: 'Microsoft Teams', status: 'connected', type: 'SAAS/COMM', icon: 'MicrosoftTeamsLogo', color: 'text-zinc-400', ipAddress: '52.113.194.132', region: 'EU-WEST-1' },
+            { id: 'CONN-06', name: 'MS Outlook', status: 'connected', type: 'SAAS/MAIL', icon: 'MicrosoftOutlookLogo', color: 'text-zinc-400', ipAddress: '40.97.148.210', region: 'US-EAST-2' },
+        ];
+        try {
+            for (const conn of connectors) {
+                await (prisma as any).gatewayConnector.upsert({
+                    where: { id: conn.id },
+                    update: conn,
+                    create: conn
+                });
+            }
+        } catch (e: any) {
+            console.error("Gateway Seeding Failed:", e.message);
+        }
     }
 };

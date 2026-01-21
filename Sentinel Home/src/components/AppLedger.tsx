@@ -74,9 +74,17 @@ export function AppLedger({ apps: initialApps = [], isLoading = false }: AppLedg
             setApps(initialApps);
         } else if (!isLoading) {
             // Fetch if not provided and not loading
-            fetch('/api/apps').then(res => res.json()).then(data => {
-                if (Array.isArray(data)) setApps(data);
-            });
+            fetch('/api/apps')
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP_${res.status}`);
+                    const contentType = res.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) throw new Error('Invalid content type');
+                    return res.json();
+                })
+                .then(data => {
+                    if (Array.isArray(data)) setApps(data);
+                })
+                .catch(err => console.error('AppLedger fetch error:', err));
         }
     }, [initialApps, isLoading]);
 
